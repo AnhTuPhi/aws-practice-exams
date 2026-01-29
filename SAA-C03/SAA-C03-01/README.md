@@ -1147,7 +1147,275 @@ Khi cần solution storage cho local mà support dạng block storage thì sẽ 
 
 ---
 
-### Q21. Which is not a NoSQL DB?
+### Q21. 
+A company is creating a prototype of an ecommerce website on AWS. The website consists of an Application Load Balancer, an Auto Scaling group of Amazon EC2 instances for web servers, and an Amazon RDS for MySQL DB instance that runs with the Single-AZ configuration.
+
+The website is slow to respond during searches of the product catalog. The product catalog is a group of tables in the MySQL database that the company does not update frequently. A solutions architect has determined that the CPU utilization on the DB instance is high when product catalog searches occur.
+
+What should the solutions architect recommend to improve the performance of the website during searches of the product catalog?
+- Implement an Amazon ElastiCache for Redis cluster to cache the product catalog. Use lazy loading to populate the cache.
+- Migrate the product catalog to an Amazon Redshift database. Use the COPY command to load the product catalog tables.
+- Add an additional scaling policy to the Auto Scaling group to launch additional EC2 instances when database response is slow.
+- Turn on the Multi-AZ configuration for the DB instance. Configure the EC2 instances to throttle the product catalog queries that are sent to the database.
+
+<details>
+<summary>Answer</summary>
+📝 Tóm tắt đề:
+
+Website gồm ALB + Auto Scaling EC2 + RDS MySQL Single-AZ
+
+Tìm kiếm bảng product catalog trong db bị chậm dẫn đến CPU cao
+
+Product catalog là nhóm bảng không update thường xuyên trong MySQL
+
+Cần cải thiện performance khi search catalog
+
+✅ Đáp án đúng:
+
+Implement an Amazon ElastiCache for Redis cluster to cache the product catalog. Use lazy loading to populate the cache.
+
+Có thể thấy được bảng product catalog mỗi khi query sẽ gây ảnh hưởng performance của DB. Để tránh việc này thì có thể cache data hay được query ra cache riêng biệt. Hơn nữa bảng này không update thường xuyên nên việc sử dụng cache sẽ càng hợp lý vì data sẽ lâu bị outdated.
+
+Giải pháp cache dùng cho RDS & Aurora chính là ElastiCache, giúp tối ưu cho dữ liệu đọc nhiều, ghi ít như product catalog.
+
+ElastiCache Redis giảm tải CPU cho RDS bằng cách trả về data query từ memory thay vì phải query trực tiếp vào database.
+
+Lazy Caching là hình thức sẽ ưu tiên query data từ cache, nếu không có thì sẽ vào DB để lấy sau đó đưa lại vào cache, để từ các request lần sau sẽ có data sẵn sàng trong cache để trả về luôn.
+
+![img](https://static.cloudexam.pro/courses/5/1756992142856-eq3tglsx-image.png)
+
+
+Các đáp án sai:
+
+❌ Migrate the product catalog to an Amazon Redshift database. Use the COPY command to load the product catalog tables.
+
+→ Redshift dành cho data warehousing/analytics & bigdata, không phù hợp cho use case ở đây.
+
+❌ Add an additional scaling policy to the Auto Scaling group to launch additional EC2 instances when database response is slow.
+→ Vấn đề nằm ở database bottleneck, không phải ở phía web server. Scale thêm EC2 chỉ tạo thêm connection đến database, làm tình trạng tệ hơn.
+
+❌ Turn on the Multi-AZ configuration for the DB instance. Configure the EC2 instances to throttle the product catalog queries that are sent to the database.
+
+→ Multi-AZ chỉ cải thiện tính khả dụng (availability) cho DB chứ không giúp cải thiện performance.
+
+🔑 Tips and tricks:
+
+Với các bài toán dùng DB dạng quan hệ mà data đọc nhiều, ghi ít thì có thể sử dụng ElastiCache để cache data
+</details>
+
+---
+
+### Q22. 
+A company runs its legacy web application on AWS. The web application server runs on an Amazon EC2 instance in the public subnet of a VPC. The web application server collects images from customers and stores the image files in a locally attached Amazon Elastic Block Store (Amazon EBS) volume. The image files are uploaded every night to an Amazon S3 bucket for backup.
+
+A solutions architect discovers that the image files are being uploaded to Amazon S3 through the public endpoint. The solutions architect needs to ensure that traffic to Amazon S3 does not use the public endpoint.
+
+Which solution will meet these requirements?
+- Move the S3 bucket inside the VPC. Configure the subnet route table to access the S3 bucket through private IP addresses.
+- Create an Amazon S3 access point for the Amazon EC2 instance inside the VPC. Configure the web application to upload by using the Amazon S3 access point.
+- Configure an AWS Direct Connect connection between the VPC that has the Amazon EC2 instance and Amazon S3 to provide a dedicated network path.
+- Create a gateway VPC endpoint for the S3 bucket that has the necessary permissions for the VPC. Configure the subnet route table to use the gateway VPC endpoint.
+
+<details>
+<summary>Answer</summary>
+📝 Tóm tắt đề:
+
+Web application chạy trên EC2 trong public subnet
+
+Upload image files lên S3 bucket mỗi đêm để backup
+
+Hiện tại traffic đến S3 đang đi qua public endpoint (tức là đi qua internet)
+
+Yêu cầu: đảm bảo traffic đến S3 không sử dụng public endpoint
+
+✅ Đáp án đúng:
+
+Create a gateway VPC endpoint for the S3 bucket that has the necessary permissions for the VPC. Configure the subnet route table to use the gateway VPC endpoint.
+
+Gateway VPC Endpoint cho S3 là giải pháp miễn phí để định tuyến traffic từ EC2 đến S3 qua mạng nội bộ AWS thay vì internet. Route table sẽ tự động định tuyến traffic S3 qua endpoint này.
+
+![img](https://static.cloudexam.pro/courses/5/1756992628593-gn6vdx1v-image.png)
+
+Các đáp án sai:
+
+❌ Move the S3 bucket inside the VPC. Configure the subnet route table to access the S3 bucket through private IP addresses.
+
+→ Vô lý vì S3 là managed service, không thể di chuyển vào trong VPC. S3 bucket luôn nằm ngoài VPC.
+
+❌ Create an Amazon S3 access point for the Amazon EC2 instance inside the VPC. Configure the web application to upload by using the Amazon S3 access point.
+
+→ S3 Access Point chỉ là cách thức để tạo ra các điểm truy cập đến S3 phục vụ các mục đích và quản lý quyền truy cập khác nhau, không giúp thay đổi đường đi của traffic. Traffic vẫn có thể đi qua public endpoint.
+
+❌ Configure an AWS Direct Connect connection between the VPC that has the Amazon EC2 instance and Amazon S3 to provide a dedicated network path.
+
+→ Sai và không cần thiết. Direct Connect dùng cho kết nối từ on-premises đến môi trường VPC, không phải cho traffic EC2-to-S3 trong cùng region.
+
+🔑 Tips and tricks:
+
+Cho phép application trong VPC access đến các service khác một cách an toàn, không đi qua internet thì nghĩ đến VPC Endpoint
+</details>
+
+---
+
+### Q23. 
+A company is launching a new application that requires a structured database to store user profiles, application settings, and transactional data. The database must be scalable with application traffic and must offer backups.
+
+Which solution will meet these requirements MOST cost-effectively?
+- Deploy a self-managed database on Amazon EC2 instances by using open source software. Use Spot Instances for cost optimization.
+- Use Amazon RDS. Use on-demand capacity mode for the database with General Purpose SSD storage. Configure automatic backups with a retention period of 7 days.
+- Use Amazon Aurora Serverless for the database. Use serverless capacity scaling. Configure automated backups to Amazon S3.
+- Deploy a self-managed NoSQL database on Amazon EC2 instances. Use Reserved Instances for cost optimization. Configure automated backups directly to Amazon S3 Glacier Flexible Retrieval.
+
+<details>
+<summary>Answer</summary>
+📝 Tóm tắt đề:
+
+Công ty cần cơ sở dữ liệu có cấu trúc (structured database) cho user profiles, settings, transactional data
+
+Yêu cầu: khả năng scale theo traffic và có backup tự động
+
+Mục tiêu: tối ưu chi phí nhất (MOST cost-effectively)
+
+✅ Đáp án đúng:
+
+Use Amazon Aurora Serverless for the database. Use serverless capacity scaling. Configure automated backups to Amazon S3.
+
+Aurora Serverless là managed service cho phép tạo database dạng quan hệ (relational), có cấu trúc (structured) dưới dạng serverless, từ đó có khả năng scale tự động để đáp ứng traffic, có cơ chế backup định kì.
+
+Với use case phổ thông thì sử dụng General Purpose SSD để tiết kiệm chi phí.
+
+Các đáp án sai:
+
+❌ Deploy a self-managed database on Amazon EC2 instances by using open source software. Use Spot Instances for cost optimization.
+
+→ Deploy DB trên EC2 làm tăng operational overhead, hơn nữa Spot Instances không ổn định cho việc chạy database production.
+
+❌ Use Amazon RDS. Use on-demand capacity mode for the database with General Purpose SSD storage. Configure automatic backups with a retention period of 7 days.
+
+→ RDS on-demand luôn chạy và tính phí 24/7, hơn nữa không có khả năng scale để đáp ứng traffic.
+
+❌ Deploy a self-managed NoSQL database on Amazon EC2 instances. Use Reserved Instances for cost optimization. Configure automated backups directly to Amazon S3 Glacier Flexible Retrieval.
+
+→ Đề yêu cầu DB dạng data có cấu trúc structured database (SQL), không phải NoSQL.
+
+🔑 Tips and tricks:
+
+DB dạng quan hệ có khả năng tự scale để đáp ứng traffic thì nghĩ đến Aurora Serverless
+</details>
+
+---
+
+### Q24. 
+A company runs an on-premises application on a Kubernetes cluster. The company recently added millions of new customers. The company's existing on-premises infrastructure is unable to handle the large number of new customers. The company needs to migrate the on-premises application to the AWS Cloud.
+
+The company will migrate to an Amazon Elastic Kubernetes Service (Amazon EKS) cluster. The company does not want to manage the underlying compute infrastructure for the new architecture on AWS.
+
+Which solution will meet these requirements with the LEAST operational overhead?
+- Use a self-managed node to supply compute capacity
+- Use managed node groups to supply compute capacity
+- Use managed node groups with Karpenter to supply compute capacity
+- Use AWS Fargate to supply compute capacity. Create a Fargate profile. Use the Fargate profile to deploy the application.
+
+<details>
+<summary>Answer</summary>
+📝 Tóm tắt đề:
+
+Công ty chạy ứng dụng Kubernetes cluster on-premises
+
+Thêm hàng triệu khách hàng mới → hạ tầng hiện tại không đủ đáp ứng
+
+Cần migrate sang Amazon EKS
+
+Không muốn quản lý (does not want to manage) hạ tầng
+
+Yêu cầu operational overhead thấp nhất (LEAST operational overhead)
+
+✅ Đáp án đúng:
+
+Use AWS Fargate to supply compute capacity. Create a Fargate profile. Use the Fargate profile to deploy the application.
+
+Fargate là dịch vụ serverless compute, được quản lý và vận hành hoàn toàn bởi AWS. Không cần quản lý nodes, patching, scaling infrastructure.
+
+Chỉ cần tạo Fargate profile và deploy pods, AWS sẽ lo toàn bộ việc vận hành kiến trúc bên dưới.
+
+Các đáp án sai:
+
+❌ Use a self-managed node to supply compute capacity
+
+→ Self-managed nodes yêu cầu quản lý toàn bộ EC2 instances, patching OS, scaling manually → operational overhead cao nhất.
+
+❌ Use managed node groups to supply compute capacity
+
+→ Managed node groups vẫn cần quản lý node scaling, instance types, AMI updates → vẫn chạy trên nền EC2 nên có operational overhead.
+
+❌ Use managed node groups with Karpenter to supply compute capacity
+
+→ Karpenter giúp auto-scaling tốt hơn nhưng vẫn cần quản lý nodes và configure Karpenter → vẫn tốn operational overhead.
+
+🔑 Tips and tricks:
+
+Các câu hỏi yêu cầu operational overhead thấp nhất (LEAST operational overhead) thì thường sẽ nghĩ đến các service serverless, đối với container thì đó là AWS Fargate
+</details>
+
+---
+
+### Q25. 
+A company has migrated an application to Amazon EC2 Linux instances. One of these EC2 instances runs several 1-hour tasks on a schedule. These tasks were written by different teams and have no common programming language. The company is concerned about performance and scalability while these tasks run on a single instance. A solutions architect needs to implement a solution to resolve these concerns.
+
+Which solution will meet these requirements with the LEAST operational overhead?
+- Copy the tasks into AWS Lambda functions. Schedule the Lambda functions by using Amazon EventBridge (Amazon CloudWatch Events).
+- Use AWS Batch to run the tasks as jobs. Schedule the jobs by using Amazon EventBridge (Amazon CloudWatch Events).
+- Convert the EC2 instance to a container. Use AWS App Runner to create the container on demand to run the tasks as jobs.
+- Create an Amazon Machine Image (AMI) of the EC2 instance that runs the tasks. Create an Auto Scaling group with the AMI to run multiple copies of the instance.
+
+<details>
+<summary>Answer</summary>
+📝 Tóm tắt đề:
+
+Công ty cần chạy job xử lý video
+
+Thời gian xử lý: lên đến 20 phút
+
+Cần giải pháp scale tự động và chi phí tiết kiệm (cost-effective)
+
+✅ Đáp án đúng:
+
+Use AWS Batch to run the tasks as jobs. Schedule the jobs by using Amazon EventBridge (Amazon CloudWatch Events).
+
+AWS Batch là managed service được thiết kế chuyên cho batch computing workloads
+
+Tự động scale compute resources dựa trên job queue
+
+Có support trigger với EventBridge để schedule lịch chạy job
+
+LEAST operational overhead vì AWS Batch lo toàn bộ việc quản lý và scale các resource
+
+Các đáp án sai:
+
+❌ Copy the tasks into AWS Lambda functions. Schedule the Lambda functions by using Amazon EventBridge (Amazon CloudWatch Events).
+
+Lambda có timeout tối đa 15 phút, ko đáp ứng yêu cầu task chạy 1 giờ
+
+❌ Convert the EC2 instance to a container. Use AWS App Runner to create the container on demand to run the tasks as jobs.
+
+App Runner chủ yếu dùng cho web applications và APIs (long-running services), không phù hợp cho việc chạy scheduled batch jobs
+
+❌ Create an Amazon Machine Image (AMI) of the EC2 instance that runs the tasks. Create an Auto Scaling group with the AMI to run multiple copies of the instance.
+
+Vẫn phải quản lý EC2 instances → operational overhead cao
+
+🔑 Tips and tricks:
+
+Đối với các câu hỏi về việc chạy job thì các solution thường nghĩ đến đó là AWS Lambda, ECS Fargate, Batch, EC2 Spot Instances.
+
+Đầu tiên cần xem thời gian chạy job là bao lâu, nếu trên 15 phút sẽ loại ngay Lambda, ưu tiên chọn các solution managed, serverless như ECS Fargate, Batch.
+
+Nếu thời gian dưới 15 phút thì thường sẽ lựa chọn Lambda
+</details>
+
+---
+
+### Q26. Which is not a NoSQL DB?
 - A. MongoDB
 - B. Redis
 - C. MySQL
@@ -1160,7 +1428,7 @@ C
 
 ---
 
-### Q22. Which is not a NoSQL DB?
+### Q27. Which is not a NoSQL DB?
 - A. MongoDB
 - B. Redis
 - C. MySQL
@@ -1173,7 +1441,7 @@ C
 
 ---
 
-### Q23. Which is not a NoSQL DB?
+### Q28. Which is not a NoSQL DB?
 - A. MongoDB
 - B. Redis
 - C. MySQL
@@ -1186,7 +1454,7 @@ C
 
 ---
 
-### Q24. Which is not a NoSQL DB?
+### Q29. Which is not a NoSQL DB?
 - A. MongoDB
 - B. Redis
 - C. MySQL
@@ -1199,7 +1467,7 @@ C
 
 ---
 
-### Q25. Which is not a NoSQL DB?
+### Q30. Which is not a NoSQL DB?
 - A. MongoDB
 - B. Redis
 - C. MySQL
@@ -1212,7 +1480,215 @@ C
 
 ---
 
-### Q2. Which is not a NoSQL DB?
+### Q31. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q32. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q30. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q31. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q32. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q33. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q34. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q35. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q36. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q37. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q38. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q39. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q40. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q41. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q42. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q43. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q44. Which is not a NoSQL DB?
 - A. MongoDB
 - B. Redis
 - C. MySQL
