@@ -1415,559 +1415,2151 @@ Nếu thời gian dưới 15 phút thì thường sẽ lựa chọn Lambda
 
 ---
 
-### Q26. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q26. 
+A company hosts a multi-tier web application that uses an Amazon Aurora MySQL DB cluster for storage. The application tier is hosted on Amazon EC2 instances. The company's IT security guidelines mandate that the database credentials be encrypted and rotated every 14 days.
+
+What should a solutions architect do to meet this requirement with the LEAST operational effort?
+- Create a new AWS Key Management Service (AWS KMS) encryption key. Use AWS Secrets Manager to create a new secret that uses the KMS key with the appropriate credentials. Associate the secret with the Aurora DB cluster. Configure a custom rotation period of 14 days.
+- Create two parameters in AWS Systems Manager Parameter Store: one for the user name as a string parameter and one that uses the SecureString type for the password. Select AWS Key Management Service (AWS KMS) encryption for the password parameter, and load these parameters in the application tier. Implement an AWS Lambda function that rotates the password every 14 days
+- Store a file that contains the credentials in an AWS Key Management Service (AWS KMS) encrypted Amazon Elastic File System (Amazon EFS) file system. Mount the EFS file system in all EC2 instances of the application tier. Restrict the access to the file on the file system so that the application can read the file and that only super users can modify the file. Implement an AWS Lambda function that rotates the key in Aurora every 14 days and writes new credentials into the file
+- Store a file that contains the credentials in an AWS Key Management Service (AWS KMS) encrypted Amazon S3 bucket that the application uses to load the credentials. Download the file to the application regularly to ensure that the correct credentials are used. Implement an AWS Lambda function that rotates the Aurora credentials every 14 days and uploads these credentials to the file in the S3 bucket
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Company có multi-tier web application sử dụng Aurora MySQL DB cluster
+
+IT security yêu cầu về thông tin đăng nhập DB (credentials) như sau:
+
+Phải có mã hóa (encrypted)
+
+Phải được làm mới mỗi 14 ngày (rotated every 14 days)
+
+Cần giải pháp với ít công sức vận hành nhất (LEAST operational effort)
+
+✅ Đáp án đúng:
+
+Create a new AWS Key Management Service (AWS KMS) encryption key. Use AWS Secrets Manager to create a new secret that uses the KMS key with the appropriate credentials. Associate the secret with the Aurora DB cluster. Configure a custom rotation period of 14 days.
+
+AWS Secrets Manager là service giúp lưu trữ các thông tin quan trọng như db credentials, username, password, v.v.. một cách an toàn.
+
+Có cơ chế làm mới (rotation) các thông tin này một cách định kì. Có tương tác trực tiếp với RDS & Aurora, có support mã hoá thông qua KMS để tăng tính security.
+
+Khi liên kết với Aurora, Secrets Manager sẽ tự động xử lý việc làm mới định kỳ mà không cần viết code custom.
+
+Đây là managed service hoàn toàn, đáp ứng đầy đủ yêu cầu mã hóa (KMS) và rotation tự động.
+
+Các đáp án sai:
+
+❌ Create two parameters in AWS Systems Manager Parameter Store: one for the user name as a string parameter and one that uses the SecureString type for the password. Select AWS Key Management Service (AWS KMS) encryption for the password parameter, and load these parameters in the application tier. Implement an AWS Lambda function that rotates the password every 14 days
+
+→ Cần phải tự code Lambda function để tạo ra logic cho việc rotation tự động, làm tăng operational effort. Hơn nữa Parameter Store không có tương tác trực tiếp với Aurora.
+
+❌ Store a file that contains the credentials in an AWS Key Management Service (AWS KMS) encrypted Amazon Elastic File System (Amazon EFS) file system. Mount the EFS file system in all EC2 instances of the application tier. Restrict the access to the file on the file system so that the application can read the file and that only super users can modify the file. Implement an AWS Lambda function that rotates the key in Aurora every 14 days and writes new credentials into the file
+
+→ Phức tạp hoá vấn đề và không cần thiết sử dụng thêm EFS trên tất cả EC2, cón thêm cả effort quản lý file, và tự code Lambda rotation logic. Operational effort cao nhất.
+
+❌ Store a file that contains the credentials in an AWS Key Management Service (AWS KMS) encrypted Amazon S3 bucket that the application uses to load the credentials. Download the file to the application regularly to ensure that the correct credentials are used. Implement an AWS Lambda function that rotates the Aurora credentials every 14 days and uploads these credentials to the file in the S3 bucket
+
+→ Cần phải tự code Lambda function để tạo ra logic cho việc rotation tự động, làm tăng operational effort. Hơn nữa việc lưu thông tin đăng nhập DB vào S3 là không tốt về mặt security, aws không khuyến cáo.
+
+🔑 Tips and tricks:
+
+Sử dụng DB, lưu trữ các thông tin quan trọng như db credentials mà cần cơ chế rotation tự động thì nghĩ ngay đến Secrets Manager
 </details>
 
 ---
 
-### Q27. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q27. 
+A solutions architect is creating an application that will handle batch processing of large amounts of data. The input data will be held in Amazon S3 and the output data will be stored in a different S3 bucket. For processing, the application will transfer the data over the network between multiple Amazon EC2 instances.
+
+What should the solutions architect do to reduce the overall data transfer costs?
+- Place all the EC2 instances in the same Availability Zone.
+- Place all the EC2 instances in an Auto Scaling group.
+- Place all the EC2 instances in the same AWS Region.
+- Place all the EC2 instances in private subnets in multiple Availability Zones.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Ứng dụng sử dụng nhiều EC2 để xử lý batch processing với lượng dữ liệu lớn
+
+Các EC2 instances này truyền tải data cho nhau thông qua network
+
+Mục tiêu: giảm chi phí data transfer
+
+✅ Đáp án đúng:
+
+Place all the EC2 instances in the same Availability Zone.
+
+Data transfer giữa các EC2 instances trong cùng một AZ là miễn phí, trong khi transfer giữa các AZ khác nhau sẽ có phí ($0.01/GB).
+
+Với batch processing lượng dữ liệu lớn, việc đặt tất cả EC2 trong cùng AZ sẽ tiết kiệm đáng kể chi phí.
+
+Các đáp án sai:
+
+❌ Place all the EC2 instances in an Auto Scaling group.
+
+→ Auto Scaling group không ảnh hưởng đến data transfer cost, chỉ giúp scale instances theo demand.
+
+❌ Place all the EC2 instances in the same AWS Region.
+
+→ Trong cùng region vẫn có thể ở khác AZ, vẫn phát sinh phí data transfer giữa các AZ.
+
+❌ Place all the EC2 instances in private subnets in multiple Availability Zones.
+
+→ Multiple AZ sẽ phát sinh data transfer cost giữa các AZ, ngược với mục tiêu giảm chi phí.
+
+📖 Reference:
+
+https://aws.amazon.com/blogs/architecture/overview-of-data-transfer-costs-for-common-architectures/
 </details>
 
 ---
 
-### Q28. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q28. 
+A company's software development team needs an Amazon RDS Multi-AZ cluster. The RDS cluster will serve as a backend for a desktop client that is deployed on premises. The desktop client requires direct connectivity to the RDS cluster.
+
+The company must give the development team the ability to connect to the cluster by using the client when the team is in the office.
+
+Which solution provides the required connectivity MOST securely?
+
+- Create a VPC and two public subnets. Create the RDS cluster in the public subnets. Use AWS Site-to-Site VPN with a customer gateway in the company's office.
+- Create a VPC and two private subnets. Create the RDS cluster in the private subnets. Use RDS security groups to allow the company's office IP ranges to access the cluster.
+- Create a VPC and two public subnets. Create the RDS cluster in the public subnets. Create a cluster user for each developer. Use RDS security groups to allow the users to access the cluster.
+- Create a VPC and two private subnets. Create the RDS cluster in the private subnets. Use AWS Site-to-Site VPN with a customer gateway in the company's office.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty cần cho desktop client cần ở phía on-premise kết nối trực tiếp (direct connectivity) tới RDS cluster trên AWS
+
+Yêu cầu giải pháp bảo mật nhất (MOST securely)
+
+✅ Đáp án đúng:
+
+
+Create a VPC and two private subnets. Create the RDS cluster in the private subnets. Use AWS Site-to-Site VPN with a customer gateway in the company's office.
+
+Để cho phía on-premise có thể kết nối đến RDS được thì sẽ cần tạo một đường truyền có tính an toàn, ở đây có thể sử dụng AWS Site-to-Site VPN, kết nối này có support mã hoá trên đường truyền.
+
+Hơn nữa có thể đặt RDS trong Private Subnet, giúp tăng tính bảo mật mà vẫn không ảnh hưởng đến việc kết nối từ phía on-premise.
+
+Ở đây phải chỉ định 2 subnet là do quy định của aws, thực tế thì RDS có thể chỉ chạy trên 1 subnet cũng được.
+
+
+![img](https://static.cloudexam.pro/courses/5/1756995744008-im7aohgm-CleanShot_2025-09-04_at_23.22.06.png)
+
+Các đáp án sai:
+
+❌ Create a VPC and two public subnets. Create the RDS cluster in the public subnets. Use AWS Site-to-Site VPN with a customer gateway in the company's office.
+
+→ RDS trong public subnet không an toàn, kém bảo mật dù có VPN
+
+❌ Create a VPC and two private subnets. Create the RDS cluster in the private subnets. Use RDS security groups to allow the company's office IP ranges to access the cluster.
+
+→ RDS trong private subnet mà không có VPN hay Direct Connect thì sẽ không thể truy cập trực tiếp từ internet được dù có setting security group rules đi nữa
+
+❌ Create a VPC and two public subnets. Create the RDS cluster in the public subnets. Create a cluster user for each developer. Use RDS security groups to allow the users to access the cluster.
+
+→ RDS trong public subnet không an toàn
+
+🔑 Tips and tricks:
+
+Lưu ý RDS hầu như không bao giờ để trong Public subnet
+
+Để kết nối on-premise đến VPC an toàn, có mã hoá trên đường truyền thì có thể sử dụng Site-to-Site VPN
 </details>
 
 ---
 
-### Q29. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q29. 
+A company uses GPS trackers to document the migration patterns of thousands of sea turtles. The trackers check every 5 minutes to see if a turtle has moved more than 100 yards (91.4 meters). If a turtle has moved, its tracker sends the new coordinates to a web application running on three Amazon EC2 instances that are in multiple Availability Zones in one AWS Region.
+
+Recently, the web application was overwhelmed while processing an unexpected volume of tracker data. Data was lost with no way to replay the events. A solutions architect must prevent this problem from happening again and needs a solution with the least operational overhead.
+
+What should the solutions architect do to meet these requirements?
+- Create an Amazon Simple Queue Service (Amazon SQS) queue to store the incoming data. Configure the application to poll for new messages for processing.
+- Create an Amazon API Gateway endpoint to handle transmitted location coordinates. Use an AWS Lambda function to process each item concurrently.
+- Create an Amazon S3 bucket to store the data. Configure the application to scan for new data in the bucket for processing.
+- Create an Amazon DynamoDB table to store transmitted location coordinates. Configure the application to query the table for new data for processing. Use TTL to remove data that has been processed.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+GPS trackers gửi tọa độ của rùa biển đến web application chạy trên 3 EC2 instances
+
+Application bị quá tải (overwhelmed) khi xử lý lượng dữ liệu bất ngờ
+
+Mất dữ liệu và không thể replay các sự kiện đã gửi
+
+Cần giải pháp ít overhead nhất để tránh tình trạng này
+
+✅ Đáp án đúng:
+
+Create an Amazon Simple Queue Service (Amazon SQS) queue to store the incoming data. Configure the application to poll for new messages for processing.
+
+SQS queue là service hàng chờ sẽ đóng vai trò như buffer/decoupling layer giữa GPS trackers và application. Khi có trafic tăng lên đột ngột thì messages vẫn sẽ được lưu trong queue đầy đủ thay vì làm quá tải application.
+
+Application có thể xử lý messages dần dần mà không sợ bị mất dữ liệu. Trong trường hợp xử lí bị fail thì message sẽ quay trở lại queue để EC2 khác xử lí lại, còn thành công thì có thể xoá message và xử lí message tiếp theo.
+
+
+![img](https://static.cloudexam.pro/courses/5/1756996327318-896rkw4b-CleanShot_2025-09-04_at_23.31.40.png)
+
+Các đáp án sai:
+
+❌ Create an Amazon S3 bucket to store the data. Configure the application to scan for new data in the bucket for processing.
+
+→ Quét S3 bucket để tìm data mới không hiệu quả và tốn cost. Không có cơ chế real-time notification và khó quản lý việc tracking được các data nào đã xử lý hay chưa xử lý.
+
+❌ Create an Amazon API Gateway endpoint to handle transmitted location coordinates. Use an AWS Lambda function to process each item concurrently.
+
+→ Không giải quyết vấn đề gốc rễ như SQS. API Gateway + Lambda vẫn có thể bị quá tải nếu traffic quá lớn.
+
+❌ Create an Amazon DynamoDB table to store transmitted location coordinates. Configure the application to query the table for new data for processing. Use TTL to remove data that has been processed.
+
+→ DynamoDB chỉ là service database, không có có cơ chế queue. Do đó vẫn có thể bị quá tải như thường.
+
+🔑 Tips and tricks:
+
+Đối với yêu cầu cần buffer request giúp giảm quá tải cho server / db thì có thể sử dụng SQS
 </details>
 
 ---
 
-### Q30. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q30. 
+
+A company is planning to migrate a legacy application to AWS. The application currently uses NFS to communicate to an on-premises storage solution to store application data. The application cannot be modified to use any other communication protocols other than NFS for this purpose.
+
+Which storage solution should a solutions architect recommend for use after the migration?
+- Amazon Elastic Block Store (Amazon EBS)
+- AWS DataSync
+- Amazon Elastic File System (Amazon EFS)
+- Amazon EMR File System (Amazon EMRFS)
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Application đang sử dụng NFS protocol để kết nối đến storage
+
+Application không thể chuyển qua sử dụng protocol khác
+
+Cần tìm storage solution tương thích khi migrate lên AWS
+
+✅ Đáp án đúng:
+
+Amazon Elastic File System (Amazon EFS)
+
+EFS là fully managed NFS service, hỗ trợ NFS protocol native
+
+Do đó sẽ tương thích với application hiện tại mà không cần thay đổi code
+
+Các đáp án sai:
+
+❌ AWS DataSync
+
+Không phải là service về storage
+
+Chỉ dùng để transfer data giữa các storage systems
+
+❌ Amazon Elastic Block Store (Amazon EBS)
+
+Block storage nên sẽ không support NFS protocol
+
+❌ Amazon EMR File System (Amazon EMRFS)
+
+Chỉ dành riêng cho Amazon EMR clusters
+
+Không phải NFS storage solution cho application hiện tại
+
+🔑 Tips and tricks:
+
+Khi thấy từ khóa NFS trên AWS thì thường sẽ nghĩ đến EFS
 </details>
 
 ---
 
-### Q31. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q31. 
+A company runs database workloads on AWS that are the backend for the company's customer portals. The company runs a Multi-AZ database cluster on Amazon RDS for PostgreSQL.
+
+The company needs to implement a 30-day backup retention policy. The company currently has both automated RDS backups and manual RDS backups. The company wants to maintain both types of existing RDS backups that are less than 30 days old.
+
+Which solution will meet these requirements MOST cost-effectively?
+- Configure the RDS backup retention policy to 30 days for automated backups. Manually delete manual backups that are older than 30 days.
+- Configure the RDS backup retention policy to 30 days for automated backups by using AWS Backup. Manually delete manual backups that are older than 30 days.
+- Disable RDS automated backups. Delete automated backups and manual backups that are older than 30 days. Configure the RDS backup retention policy to 30 days for automated backups.
+- Disable RDS automated backups. Delete automated backups and manual backups that are older than 30 days automatically by using AWS CloudFormation. Configure the RDS backup retention policy to 30 days for automated backups.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty chạy Multi-AZ PostgreSQL cluster trên RDS
+
+Công ty quy định backup chỉ lưu trữ 30 ngày
+
+Hiện tại có cả automated RDS backups và manual RDS backups
+
+Yêu cầu giải pháp cost-effective nhất
+
+✅ Đáp án đúng:
+
+Configure the RDS backup retention policy to 30 days for automated backups. Manually delete manual backups that are older than 30 days.
+
+Automated backup là cơ chế backup tự động của RDS, có thể lưu trữ tối đa 35 ngày. Đối với backup loại này thì chỉ cần thay đổi cấu hình retention policy thành 30 ngày.
+
+Manual backup là backup thủ công nên sẽ lưu trữ vô thời hạn, do đó cần xoá thủ công những snapshot đã quá 30 ngày.
+
+Các đáp án sai:
+
+❌ Configure the RDS backup retention policy to 30 days for automated backups by using AWS Backup. Manually delete manual backups that are older than 30 days.
+
+→ Không cần thiết sử dụng AWS Backup khi RDS đã có sẵn tính năng retention policy cho automated backups. AWS Backup tăng thêm chi phí và độ phức tạp.
+
+❌ Disable RDS automated backups. Delete automated backups and manual backups that are older than 30 days. Configure the RDS backup retention policy to 30 days for automated backups.
+
+→ Logic mâu thuẫn: disable automated backups rồi lại configure retention policy cho automated backups. Việc disable sẽ làm mất tính năng tự động backup này luôn rồi.
+
+❌ Disable RDS automated backups. Delete automated backups and manual backups that are older than 30 days automatically by using AWS CloudFormation. Configure the RDS backup retention policy to 30 days for automated backups.
+
+→ Tương tự đáp án trên, logic không nhất quán. CloudFormation cũng tăng độ phức tạp không cần thiết.
 </details>
 
 ---
 
-### Q32. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q32. 
+A company is designing the architecture for a new mobile app that uses the AWS Cloud. The company uses organizational units (OUs) in AWS Organizations to manage its accounts. The company wants to tag Amazon EC2 instances with data sensitivity by using values of sensitive and nonsensitive. IAM identities must not be able to delete a tag or create instances without a tag.
+
+Which combination of steps will meet these requirements? (Choose two.)
+- In Organizations, create a new service control policy (SCP) that specifies the data sensitivity tag key and the required tag values. Enforce the tag values for the EC2 instances.
+- Create a service control policy (SCP) to deny creating instances when a tag key is not specified. Create another SCP that prevents identities from deleting tags. Attach the SCPs to the appropriate OU.
+- Create a tag policy to deny running instances when a tag key is not specified. Create another tag policy that prevents identities from deleting tags.
+- Create an AWS Config rule to check if EC2 instances use the data sensitivity tag and the specified values. Configure an AWS Lambda function to delete the resource if a noncompliant resource is found.
+- In Organizations, create a new tag policy that specifies the data sensitivity tag key and the required values. Enforce the tag values for the EC2 instances. Attach the tag policy to the appropriate OU.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty muốn gắn thẻ (tag) cho EC2 instances với giá trị "sensitive" hoặc "nonsensitive"
+
+Yêu cầu bắt buộc: IAM identities không được phép xóa tag hoặc tạo instance không có tag
+
+Sử dụng AWS Organizations với organizational units (OUs) để quản lý
+
+✅ Đáp án đúng:
+
+In Organizations, create a new tag policy that specifies the data sensitivity tag key and the required values. Enforce the tag values for the EC2 instances. Attach the tag policy to the appropriate OU.
+
+Tag Policy được thiết kế chính xác cho mục đích này - kiểm soát việc gắn tag và bắt buộc gán giá trị tag cụ thể cho resources.
+
+Create a service control policy (SCP) to deny creating instances when a tag key is not specified. Create another SCP that prevents identities from deleting tags. Attach the SCPs to the appropriate OU.
+
+SCP có thể ngăn chặn các hành động cụ thể như tạo instance không có tag và xóa tag, đáp ứng yêu cầu kiểm soát quyền hạn.
+
+Các đáp án sai:
+
+❌ In Organizations, create a new service control policy (SCP) that specifies the data sensitivity tag key and the required tag values. Enforce the tag values for the EC2 instances.
+
+→ SCP không có cơ chế bắt buộc gắn tag cho resource - chủ yếu để deny các actions trong Organzation. Việc bắt buộc gắn tag là chức năng của Tag Policy.
+
+❌ Create a tag policy to deny running instances when a tag key is not specified. Create another tag policy that prevents identities from deleting tags.
+
+→ Tag Policy không thể deny actions như ngăn tạo instance hay xóa tag. Tag Policy chỉ enforce tag compliance, không có quyền deny actions.
+
+❌ Create an AWS Config rule to check if EC2 instances use the data sensitivity tag and the specified values. Configure an AWS Lambda function to delete the resource if a noncompliant resource is found.
+
+→ Dùng thêm AWS Config và Lambda làm tăng tính phức tạp không cần thiết, hơn nữa config rule chỉ có thể kiểm tra resource có đảm bảo tuân thủ hay không, chứ không có cơ chế ngăn chặn việc tạo resource không tuân thủ.
+
+🔑 Tips and tricks:
+
+Cần bắt buộc việc gắn tag và gán giá trị cho tag trong Organization thì nghĩ đến Tag policy
+
+Cần chặn một hành động (action) nào đó trong Organization thì sẽ nghĩ đến SCP
 </details>
 
 ---
 
-### Q30. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q33. 
+A company recently launched a new application for its customers. The application runs on multiple Amazon EC2 instances across two Availability Zones. End users use TCP to communicate with the application.
+
+The application must be highly available and must automatically scale as the number of users increases.
+
+Which combination of steps will meet these requirements MOST cost-effectively? (Choose two.)
+- Add a Network Load Balancer in front of the EC2 instances.
+- Configure an Auto Scaling group for the EC2 instances.
+- Add an Application Load Balancer in front of the EC2 instances.
+- Manually add more EC2 instances for the application.
+- Add a Gateway Load Balancer in front of the EC2 instances.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Ứng dụng chạy trên nhiều EC2 instances ở 2 Availability Zones
+
+End users sử dụng TCP để giao tiếp với ứng dụng
+
+Yêu cầu: hệ thống có tính khả dụng cao (high available) và scale tự động khi số user tăng
+
+Tìm giải pháp cost-effective
+
+✅ Đáp án đúng:
+
+Add a Network Load Balancer in front of the EC2 instances.
+
+TCP traffic → Network Load Balancer là lựa chọn tối ưu vì được thiết kế đặc biệt cho Layer 4 (TCP/UDP)
+
+Có hiệu năng cao, độ trễ thấp cho TCP connections
+
+Configure an Auto Scaling group for the EC2 instances.
+
+Đáp ứng yêu cầu automatically scale khi số user tăng
+
+Cost-effective vì chỉ trả tiền cho resources thực sự cần thiết
+
+![img](https://static.cloudexam.pro/courses/5/1756998489546-c4ro7rrb-CleanShot_2025-09-05_at_00.07.53.png)
+
+Các đáp án sai:
+
+❌ Add an Application Load Balancer in front of the EC2 instances.
+
+ALB hoạt động ở Layer 7 (HTTP/HTTPS), không support traffic TCP
+
+❌ Manually add more EC2 instances for the application.
+
+Không đáp ứng yêu cầu scale tự động "automatically scale"
+
+❌ Add a Gateway Load Balancer in front of the EC2 instances.
+
+GWLB dành cho việc kiểm tra traffic/security (firewalls, IDS/IPS)
+
+Không phù hợp với application traffic thông thường, chi phí cao không cần thiết
+
+🔑 Tips and tricks:
+
+Traffic TCP thì sẽ nghĩ đến Network Load Balancer, Global Accelerator
 </details>
 
 ---
 
-### Q31. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q34. 
+
+A company is testing an application that runs on an Amazon EC2 Linux instance. A single 500 GB Amazon Elastic Block Store (Amazon EBS) General Purpose SSO (gp2) volume is attached to the EC2 instance.
+
+The company will deploy the application on multiple EC2 instances in an Auto Scaling group. All instances require access to the data that is stored in the EBS volume. The company needs a highly available and resilient solution that does not introduce significant changes to the application's code.
+
+Which solution will meet these requirements?
+- Provision an Amazon Elastic File System (Amazon EFS) file system. Configure the file system to use General Purpose performance mode.
+- Provision an EC2 instance that uses NFS server software. Attach a single 500 GB gp2 EBS volume to the instance.
+- Provision an Amazon FSx for Windows File Server file system. Configure the file system as an SMB file store within a single Availability Zone.
+- Provision an EC2 instance with two 250 GB Provisioned IOPS SSD EBS volumes.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Ứng dụng chạy trên một EC2 Linux instance với data lưu trong EBS
+
+Sẽ triển khai trên nhiều EC2 instances với Auto Scaling group
+
+Tất cả instances cần truy cập cùng dữ liệu đang nằm trong EBS đó
+
+Cần giải pháp highly available và resilient
+
+Không thay đổi code ứng dụng nhiều
+
+✅ Đáp án đúng:
+
+Provision an Amazon Elastic File System (Amazon EFS) file system. Configure the file system to use General Purpose performance mode.
+
+Bài toán cần hệ thống file share cho linux, thì đó chính là EFS. Đây là managed service cho phép các EC2 instances Linux truy cập cùng lúc vào cùng một file system thông qua giao thức native của Linux là NFS.
+
+Ngoài ra EFS còn có tính khả dụng cao (Highly available across multiple AZs), scale tự động (automatically scales), và tương thích với Linux mà không cần thay đổi code nhiều.
+
+![img](https://static.cloudexam.pro/courses/5/1756999090866-gnms2nvn-image.png)
+
+
+Các đáp án sai:
+
+❌ Provision an EC2 instance that uses NFS server software. Attach a single 500 GB gp2 EBS volume to the instance.
+
+→ Chỉ có 1 EC2 instance đóng vai trò làm NFS serve thì không đáp ứng yêu cầu tính khả dụng cao highly available.
+
+❌ Provision an Amazon FSx for Windows File Server file system. Configure the file system as an SMB file store within a single Availability Zone.
+
+→ FSx for Windows dành cho Windows workloads và SMB protocol, không phù hợp với Linux instance. Chỉ trong single AZ cũng không highly available.
+
+❌ Provision an EC2 instance with two 250 GB Provisioned IOPS SSD EBS volumes.
+
+→ Vẫn là một EBS volumes gắn vào một instance, không giải quyết vấn đề nhiều instances cần truy cập chung data.
+
+🔑 Tips and tricks:
+
+Fileshare cho Linux instance thì thường sẽ nghĩ đến EFS
 </details>
 
 ---
 
-### Q32. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q35.
+A company stores user data in AWS. The data is used continuously with peak usage during business hours. Access patterns vary, with some data not being used for months at a time. A solutions architect must choose a cost-effective solution that maintains the highest level of durability while maintaining high availability.
+
+Which storage solution meets these requirements?
+- Amazon S3 Standard
+- Amazon S3 Intelligent-Tiering
+- Amazon S3 Glacier Deep Archive
+- Amazon S3 One Zone-IA
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty muốn lưu trữ dữ liệu người dùng trên AWS
+
+Patterns truy cập thay đổi không biết trước được (access patterns vary) - một số dữ liệu không dùng trong nhiều tháng
+
+Yêu cầu: tiết kiệm (cost-effective), khả dụng cao (highest durability, high availability)
+
+✅ Đáp án đúng:
+
+Đầu tiên với use case lưu trữ dữ liệu với chi phí thấp thì service phù hợp sẽ là S3.
+
+Với tần suất truy cập không biết trước mà vẫn muốn tiết kiệm chi phí thì lựa chọn Amazon S3 Intelligent-Tiering vì có các đặc điểm sau:
+
+Tự động chuyển đổi giữa các storage class dựa trên tần suất truy cập thực tế
+
+Có tính khả dụng cao
+
+Cost-effective vì chỉ trả phí theo usage thực tế
+
+![img](https://static.cloudexam.pro/courses/5/1756999797220-42c3oess-image.png)
+
+Các đáp án sai:
+
+❌ Amazon S3 Standard
+
+Không tiết kiệm chi phí cho data ít được access
+
+Giá cao nhất trong các S3 storage class
+
+❌ Amazon S3 Glacier Deep Archive
+
+Đây là tầng lưu trữ thiết kế để lưu data lâu dài
+
+Không phù hợp với tần suất truy cập không biết trước
+
+❌ Amazon S3 One Zone-IA
+
+Không đáp ứng yêu cầu "highest durability" vì chỉ lưu data trong 1 AZ
+
+🔑 Tips and tricks:
+
+Sử dụng S3 không biết trước tần suất, chỉ muốn tiết kiệm chi phí thì sẽ nghĩ đến Amazon S3 Intelligent-Tiering
 </details>
 
 ---
 
-### Q33. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q36. 
+A company hosts its main public web application in one AWS Region across multiple Availability Zones. The application uses an Amazon EC2 Auto Scaling group and an Application Load Balancer (ALB).
+
+A web development team needs a cost-optimized compute solution to improve the company’s ability to serve dynamic content globally to millions of customers.
+
+Which solution will meet these requirements?
+- Create an Amazon S3 bucket with public read access enabled. Migrate the web application to the S3 bucket.
+- Use Amazon Route 53 to serve traffic to the ALB and EC2 instances based on the geographic location of each customer.
+- Use AWS Direct Connect to directly serve content from the web application to the location of each customer.
+- Create an Amazon CloudFront distribution. Configure the existing ALB as the origin.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty có web application chạy trên EC2 Auto Scaling + ALB
+
+Cần giải pháp cost-optimized để cung cấp dynamic content trên toàn cầu cho hàng triệu người dùng
+
+Yêu cầu: chi phí tối ưu
+
+✅ Đáp án đúng:
+
+Create an Amazon CloudFront distribution. Configure the existing ALB as the origin.
+
+CloudFront là CDN service phù hợp để cung cấp content globally với chi phí tối ưu.
+
+Tuy rằng CloudFront chủ yếu dùng để cache static content tại edge locations gần user, giúp giảm độ trễ nhưng nó cũng giúp cho việc delivery dyanmic content đến người dùng một cách nhanh hơn.
+
+Tham khảo link của aws ở bên dưới.
+
+Các đáp án sai:
+
+❌ Use Amazon Route 53 to serve traffic to the ALB and EC2 instances based on the geographic location of each customer.
+
+→ Route 53 chỉ là service DNS routing, không giải giúp cho việc phân phối content globally, không có caching tại edge location.
+
+❌ Create an Amazon S3 bucket with public read access enabled. Migrate the web application to the S3 bucket.
+
+→ S3 chỉ giúp host static content, không thể host dynamic web application. Đề bài yêu cầu serve dynamic content.
+
+❌ Use AWS Direct Connect to directly serve content from the web application to the location of each customer.
+
+→ Direct Connect là kết nối môi trường on-premise và VPC, không phải giải pháp CDN để cung cấp content đến người dùng toàn cầu. Chi phí rất cao.
+
+
+📖 Reference:
+
+https://aws.amazon.com/cloudfront/dynamic-content/
 </details>
 
 ---
 
-### Q34. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q37. 
+A company hosts its core network services, including directory services and DNS, in its on-premises data center. The data center is connected to the AWS Cloud using AWS Direct Connect (DX). Additional AWS accounts are planned that will require quick, cost-effective, and consistent access to these network services.
+
+What should a solutions architect implement to meet these requirements with the LEAST amount of operational overhead?
+- Configure VPC endpoints in the DX VPC for all required services. Route the network traffic to the on-premises servers.
+- Configure AWS Transit Gateway between the accounts. Assign DX to the transit gateway and route network traffic to the on-premises servers.
+- Create a DX connection in each new account. Route the network traffic to the on-premises servers.
+- Create a VPN connection between each new account and the DX VPC Route the network traffic to the on-premises servers.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty đã có data center kết nối với AWS qua AWS Direct Connect (DX)
+
+Bây giờ khi tạo thêm AWS accounts mới cần cho truy cập một cách nhanh gọn, tiết kiệm qua đường truyền đến các network services phía on-premise
+
+Yêu cầu: LEAST operational overhead
+
+✅ Đáp án đúng:
+
+Configure AWS Transit Gateway between the accounts. Assign DX to the transit gateway and route network traffic to the on-premises servers.
+
+Transit Gateway cho phép quản lí kết nối tập trung giữa nhiều accounts và môi trường on-premises thông qua một cổng kết nối duy nhất.
+
+DX connection được sẽ được gắn vào Transit Gateway, tất cả accounts mới cũng chỉ cần gắn với Transit Gateway thì sẽ truy cập được on-premises network services.
+
+Giải pháp này có operational overhead thấp nhất vì chỉ cần setup một lần và dễ dàng scale khi thêm accounts mới.
+
+![img](https://static.cloudexam.pro/courses/5/1757000856549-dt8m0dpx-CleanShot_2025-09-05_at_00.47.26.png)
+
+
+Các đáp án sai:
+
+❌ Create a DX connection in each new account. Route the network traffic to the on-premises servers.
+
+→ Tạo DX cho mỗi account mới rất sẽ tốn kém (DX có monthly fee cao) và operational overhead lớn (phải quản lý nhiều DX connections).
+
+❌ Configure VPC endpoints in the DX VPC for all required services. Route the network traffic to the on-premises servers.
+
+→ VPC endpoints là service cho phép VPC kết nối private đến các AWS services, không thể sử dụng kết nối đến on-premises.
+
+❌ Create a VPN connection between each new account and the DX VPC Route the network traffic to the on-premises servers.
+
+→ Mặc dù chi phí thấp hơn DX, nhưng vẫn phải setup và quản lý nhiều VPN connections, operational overhead cao hơn Transit Gateway.
+
+🔑 Tips and tricks:
+
+Khi cần kết nối môi trường On-premise với nhiều AWS account thông qua DirectConnect thì nghĩ đến Transit Gateway
 </details>
 
 ---
 
-### Q35. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q38. 
+A company has an Amazon S3 bucket that contains sensitive data files. The company has an application that runs on virtual machines in an on-premises data center. The company currently uses AWS IAM Identity Center.
+
+The application requires temporary access to files in the S3 bucket. The company wants to grant the application secure access to the files in the S3 bucket.
+
+Which solution will meet these requirements?
+- Install the AWS CLI on the virtual machine. Configure the AWS CLI with access keys from an IAM user
+- Use IAM Roles Anywhere to obtain security credentials in IAM Identity Center that grant access to the S3 bucket. Configure the virtual machines to assume the role by using the AWS CLI.
+- Create an S3 bucket policy that permits access to the bucket from the public IP address range
+- Create an IAM user and policy that grants access to the bucket. Store the access key and secret key for the IAM user in AWS Secrets Manager. Configure the application to retrieve the access key and secret key at startup.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty có S3 bucket chứa dữ liệu nhạy cảm (sensitive data)
+
+Ứng dụng chạy trên máy ảo on-premises
+
+Công ty đã sử dụng AWS IAM Identity Center
+
+Ứng dụng cần truy cập tạm thời (temporary access) vào files trong S3
+
+Yêu cầu: truy cập an toàn (secure access)
+
+✅ Đáp án đúng:
+
+Use IAM Roles Anywhere to obtain security credentials in IAM Identity Center that grant access to the S3 bucket. Configure the virtual machines to assume the role by using the AWS CLI.
+
+IAM Roles Anywhere cho phép workload on-premises sử dụng credentials tạm thời thông qua certificate-based authentication. Giải pháp này cung cấp truy cập tạm thời (temporary access) như yêu cầu và tích hợp tốt với IAM Identity Center hiện có.
+
+![img](https://static.cloudexam.pro/courses/5/1757001092698-zljsvg1t-image.png)
+
+Các đáp án sai:
+
+❌ Create an S3 bucket policy that permits access to the bucket from the public IP address range
+
+→ Dựa vào IP address không an toàn vì IP có thể thay đổi và không cung cấp được việc cấp quyền tạm thời thực sự.
+
+❌ Install the AWS CLI on the virtual machine. Configure the AWS CLI with access keys from an IAM user
+→ Access keys from an IAM user là credentials lâu dài, không phải credentials tạm thời như yêu cầu và kém an toàn hơn.
+
+❌ Create an IAM user and policy that grants access to the bucket. Store the access key and secret key for the IAM user in AWS Secrets Manager. Configure the application to retrieve the access key and secret key at startup.
+
+→ Vẫn là credentials lâu dài, không phải credentials tạm thời.
+
+📖 Reference:
+
+https://aws.amazon.com/blogs/security/use-iam-roles-anywhere-to-help-you-improve-security-in-on-premises-container-workloads/
 </details>
 
 ---
 
-### Q36. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q39. 
+A company is building a cloud-based application on AWS that will handle sensitive customer data. The application uses Amazon RDS for the database, Amazon S3 for object storage, and S3 Event Notifications that invoke AWS Lambda for serverless processing.
+
+The company uses AWS IAM Identity Center to manage user credentials. The development, testing, and operations teams need secure access to Amazon RDS and Amazon S3 while ensuring the confidentiality of sensitive customer data. The solution must comply with the principle of least privilege.
+
+Which solution meets these requirements with the LEAST operational overhead?
+- Create individual IAM users for each member in all the teams with role-based permissions. Assign the IAM roles with predefined policies for RDS and S3 access to each user based on user needs. Implement IAM Access Analyzer for periodic credential evaluation.
+- Enable IAM Identity Center with an Identity Center directory. Create and configure permission sets with granular access to Amazon RDS and Amazon S3. Assign all the teams to groups that have specific access with the permission sets.
+- Use IAM roles with least privilege to grant all the teams access. Assign IAM roles to each team with customized IAM policies defining specific permission for Amazon RDS and S3 object access based on team responsibilities.
+- Use AWS Organizations to create separate accounts for each team. Implement cross-account IAM roles with least privilege. Grant specific permission for RDS and S3 access based on team roles and responsibilities.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty xây dựng ứng dụng xử lý dữ liệu nhạy cảm khách hàng (sensitive customer data) với RDS, S3, Lambda
+
+Đang dùng AWS IAM Identity Center để quản lý xác thực
+
+Cần cấp quyền cho 3 teams (dev, test, ops) truy cập Amazon RDS và S3
+
+Yêu cầu: tuân thủ nguyên tắc ít quyền nhất (least privilege) với ít operational overhead nhất
+
+✅ Đáp án đúng:
+
+Enable IAM Identity Center with an Identity Center directory. Create and configure permission sets with granular access to Amazon RDS and Amazon S3. Assign all the teams to groups that have specific access with the permission sets.
+
+Đề bài đã nói rõ "company uses AWS IAM Identity Center", nên sử dụng luôn các chức năng của IAM Identity Center và quản lý tại chỗ là giải pháp chính là tối ưu nhất.
+
+Permission sets cho phép quản lý quyền theo nhóm một cách tập trung, giảm operational overhead và dễ dàng implement least privilege.
+
+
+
+Các đáp án sai:
+
+❌ Use IAM roles with least privilege to grant all the teams access. Assign IAM roles to each team with customized IAM policies defining specific permission for Amazon RDS and S3 object access based on team responsibilities.
+
+→ Không tận dụng IAM Identity Center đã có sẵn, tăng độ phức tạp không cần thiết khi phải quản lý nhiều IAM roles riêng lẻ.
+
+❌ Create individual IAM users for each member in all the teams with role-based permissions. Assign the IAM roles with predefined policies for RDS and S3 access to each user based on user needs. Implement IAM Access Analyzer for periodic credential evaluation.
+
+→Tạo individual IAM users cho từng thành viên tạo ra operational overhead rất cao, không cần thiết.
+
+❌ Use AWS Organizations to create separate accounts for each team. Implement cross-account IAM roles with least privilege. Grant specific permission for RDS and S3 access based on team roles and responsibilities.
+
+→Tách account cho mỗi team rất tốn công, tạo ra độ phức tạo và chi phí vận hành không cần thiết cho requirement này.
 </details>
 
 ---
 
-### Q37. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q40. 
+A company hosts its application on several Amazon EC2 instances inside a VPC. The company creates a dedicated Amazon S3 bucket for each customer to store their relevant information in Amazon S3.
+
+The company wants to ensure that the application running on EC2 instances can securely access only the S3 buckets that belong to the company’s AWS account.
+
+Which solution will meet these requirements with the LEAST operational overhead?
+- Create a NAT Gateway in a public subnet. Update route tables to use the NAT Gateway. Assign bucket policies for all buckets with a Deny action and the following condition key:
+
+{
+"StringNotEquals" : {
+"s3:ResourceAccount" : [ "CompanyAWSAccountNumber" ]
+}
+}
+- Create a gateway endpoint for Amazon S3 that is attached to the VPC. Update the IAM instance profile policy with a Deny action and the following condition key:
+
+{
+"StringNotEquals" : {
+"s3:ResourceAccount" : [ "CompanyAWSAccountNumber" ]
+}
+}
+- Create a NAT gateway in a public subnet with a security group that allows access to only Amazon S3. Update the route tables to use the NAT Gateway.
+- Create a gateway endpoint for Amazon S3 that is attached to the VPC. Update the IAM instance profile policy to provide access to only the specific buckets that the application needs.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Ứng dụng chạy trên EC2 instances trong VPC
+
+Có S3 Bucket quản lý theo từng customer
+
+Yêu cầu: muốn cho EC2 chỉ truy cập được S3 buckets trong AWS account của công ty một cách an toàn
+
+Tìm giải pháp với ít operational overhead nhất
+
+✅ Đáp án đúng:
+
+Create a gateway endpoint for Amazon S3 that is attached to the VPC. Update the IAM instance profile policy with a Deny action and the following condition key:
+
+{
+"StringNotEquals" : {
+"s3:ResourceAccount" : [ "CompanyAWSAccountNumber" ]
+}
+}
+VPC Gateway Endpoint là service cho phép các application bên trong VPC có thể kết nối đến S3 mà không cần đi qua internet, mà thay vào đó là đường nội bộ của AWS, do đó sẽ giúp tiết kiệm chi phí và tối ưu, đồng thời có tính an toàn.
+
+Còn việc giới hạn EC2 chỉ cho truy cập đến S3 buckets trong AWS account của công ty thì có thể dùng câu lệnh điều kiện Condition trong Bucket policy để deny nếu account không phải là của công ty
+
+Các đáp án sai:
+
+❌ Create a gateway endpoint for Amazon S3 that is attached to the VPC. Update the IAM instance profile policy to provide access to only the specific buckets that the application needs.
+
+→ Mặc dù thoáng qua có vẻ hợp lý, tuy nhiên mỗi lần có user & tạo bucket mới thì sẽ lại phải update policy. Hơn nữa độ dài policy sẽ có giới hạn, không thể mỗi lần như vậy cứ dài thêm được.
+
+❌ Create a NAT gateway in a public subnet with a security group that allows access to only Amazon S3. Update the route tables to use the NAT Gateway.
+
+→ NAT Gateway gây thêm tốn chi phí không cần thiết, trong khi VPC Gateway Endpoint là miễn phí. Hơn nữa traffic đi ra internet nên không an toàn.
+
+❌ Create a NAT Gateway in a public subnet. Update route tables to use the NAT Gateway. Assign bucket policies for all buckets with a Deny action and the following condition key:
+
+{
+"StringNotEquals" : {
+"s3:ResourceAccount" : [ "CompanyAWSAccountNumber" ]
+}
+}
+→ Tương tự như đáp án sử dụng NAT gateway ở trên
+
+🔑 Tips and tricks:
+
+EC2 từ bên trong VPC muốn access đến S3, nghĩ ngay đến Gateway Endpoint (áp dụng cho S3, DynamoDB)
 </details>
 
 ---
 
-### Q38. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q41. 
+A company is developing a new application that uses a relational database to store user data and application configurations. The company expects the application to have steady user growth. The company expects the database usage to be variable and read-heavy, with occasional writes.
+
+The company wants to cost-optimize the database solution. The company wants to use an AWS managed database solution that will provide the necessary performance.
+
+Which solution will meet these requirements MOST cost-effectively?
+- Deploy the database on Amazon RDS. Use magnetic storage and use read replicas to accommodate the workload.
+- Deploy the database on Amazon RDS. Use Provisioned IOPS SSD storage to ensure consistent performance for read and write operations.
+- Deploy the database on Amazon Aurora Serverless to automatically scale the database capacity based on actual usage to accommodate the workload.
+- Deploy the database on Amazon DynamoDB. Use on-demand capacity mode to automatically scale throughput to accommodate the workload.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty sử dụng cơ sở dữ liệu quan hệ (relational database)
+
+Lưu lượng sử dụng database biến động (variable), không cân bằng (đọc nhiều, thỉnh thoảng mới ghi)
+
+Cần AWS managed database với chi phí tối ưu (cost-optimize) với đảm bảo performance
+
+✅ Đáp án đúng:
+
+Deploy the database on Amazon Aurora Serverless to automatically scale the database capacity based on actual usage to accommodate the workload.
+
+Aurora Serverless là managed service cho phép tạo cơ sở dữ liệu dạng quan hệ trên nền serverless, hoàn hảo cho workload biến động, bất ổn vì có khả năng tự động scale up/down để đáp ứng lượng truy cập thực tế.
+
+Chi phí cũng tối ưu vì chỉ phải trả tiền khi sử dụng.
+
+Các đáp án sai:
+
+❌ Deploy the database on Amazon RDS. Use Provisioned IOPS SSD storage
+
+→ RDS thông thường không có khả năng tự scale để đáp ứng traffic.
+
+❌ Deploy the database on Amazon DynamoDB. Use on-demand capacity mode
+
+→ DynamoDB là NoSQL, không phải relational database như yêu cầu đề bài.
+
+❌ Deploy the database on Amazon RDS. Use magnetic storage and read replicas
+
+→ RDS thông thường không có khả năng tự scale để đáp ứng traffic.
+
+🔑 Tips and tricks:
+
+DB dạng quan hệ có khả năng tự scale để đáp ứng traffic thì nghĩ đến Aurora Serverless
 </details>
 
 ---
 
-### Q39. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q42. 
+A company is migrating its on-premises Oracle database to an Amazon RDS for Oracle database. The company needs to retain data for 90 days to meet regulatory requirements. The company must also be able to restore the database to a specific point in time for up to 14 days.
+
+Which solution will meet these requirements with the LEAST operational overhead?
+- Create Amazon RDS automated backups. Set the retention period to 90 days.
+- Use the Amazon Aurora Clone feature for Oracle to create a point-in-time restore. Delete clones that are older than 90 days.
+- Create a backup plan that has a retention period of 90 days by using AWS Backup for Amazon RDS with Point In Time Recovery enabled.
+- Create an Amazon RDS manual snapshot every day. Delete manual snapshots that are older than 90 days.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty đang chuyển sang sử dụng Amazon RDS for Oracle
+
+Có các yêu cầu sau về lưu trữ data cho db:
+
+Data cần lưu trữ 90 ngày
+
+Có khả năng phục hồi db về thời điểm cụ thể trong 14 ngày gần nhất
+
+Yêu cầu: LEAST operational overhead (ít vận hành nhất)
+
+✅ Đáp án đúng:
+
+Create a backup plan that has a retention period of 90 days by using AWS Backup for Amazon RDS with Point In Time Recovery enabled.
+
+AWS Backup là managed service chuyên cho việc quản lý backup tập trung, hỗ trợ backup tự động với thời gian lưu trữ có thể lên đến vô thời hạn, ở đây để đáp ứng yêu cầu thì sẽ set là 90 ngày.
+
+Point-in-time recovery là cơ chế backup tăng tiến tự động của RDS, giúp có thể quay lại bất cứ thời điểm nào trong quá khứ (tối đa 35 ngày), do đó đáp ứng yêu cầu có khả năng phục hồi db về thời điểm cụ thể trong 14 ngày gần nhất.
+
+AWS Backup giảm thiểu effort vận hành vì là managed service.
+
+Các đáp án sai:
+
+❌ Create Amazon RDS automated backups. Set the retention period to 90 days.
+
+RDS automated backups chỉ hỗ trợ lưu trữ tối đa 35 ngày, không thể set 90 ngày.
+
+❌ Create an Amazon RDS manual snapshot every day. Delete manual snapshots that are older than 90 days.
+
+High operational overhead: cần script tự động tạo snapshot hàng ngày và cleanup. Manual process không optimal.
+
+❌ Use the Amazon Aurora Clone feature for Oracle to create a point-in-time restore.
+
+Aurora không support cho Oracle, chỉ support MySQL / PostgresQL
 </details>
 
 ---
 
-### Q40. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q43.
+A financial services company plans to launch a new application on AWS to handle sensitive financial transactions. The company will deploy the application on Amazon EC2 instances behind an Application Load Balancer. The company will use Amazon RDS for MySQL as the database. The company’s security policies mandate that data must be encrypted at rest and in transit.
+
+Which solution will meet these requirements with the LEAST operational overhead?
+- Configure encryption at rest for Amazon RDS for MySQL by using AWS KMS managed keys. Configure AWS Certificate Manager (ACM) SSL/TLS certificates for encryption in transit.
+- Implement third-party application-level data encryption before storing data in Amazon RDS for MySQL. Configure AWS Certificate Manager (ACM) SSL/TLS certificates for encryption in transit.
+- Configure encryption at rest for Amazon RDS for MySQL by using AWS KMS managed keys. Configure a VPN connection to enable private connectivity to encrypt data in transit.
+- Configure encryption at rest for Amazon RDS for MySQL by using AWS KMS managed keys. Configure IPsec tunnels for encryption in transit.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty triển khai ứng dụng trên EC2 và RDS MySQL
+
+Yêu cầu: mã hóa dữ liệu đầu cuối (encryption at rest) và mã hoá trên đường truyền (encryption in transit)
+
+Mục tiêu: giải pháp có ít overhead vận hành nhất (LEAST operational overhead)
+
+✅ Đáp án đúng:
+
+Configure encryption at rest for Amazon RDS for MySQL by using AWS KMS managed keys. Configure AWS Certificate Manager (ACM) SSL/TLS certificates for encryption in transit.
+
+Đối với yêu cầu mã hóa đầu cuối (encryption at rest), thì solution thường thấy ngay đó là KMS. KMS là managed service giúp quản lý key để mã hoá đầu cuối cho các service như RDS, S3. Cách sử dụng cũng rất đơn giản, chỉ cần chỉ định key khi tạo RDS, việc mã hoá sẽ được tự động hoàn toàn, do đó không tốn effort vận hành
+
+Đối với yêu cầu mã hoá trên đường truyền (encryption in transit) thì sẽ cần sử dụng giao thức an toàn có mã hoá như HTTPS TLS SSL. Đối với ALB, để enable HTTPS thì cần tạo certificate SSL/TLS trong ACM sau đó gắn vào ALB. Certificate cũng có cơ chế gia hạn và làm mới tự động, giúp giảm effort vận hành
+
+Các đáp án sai:
+
+❌ Configure encryption at rest for Amazon RDS for MySQL by using AWS KMS managed keys. Configure IPsec tunnels for encryption in transit.
+
+IPsec tunnels cấu hình phức tạp, làm tăng effort về mặt vận hành, không hiệu quả bằng sử dụng ACM.
+
+❌ Implement third-party application-level data encryption before storing data in Amazon RDS for MySQL. Configure AWS Certificate Manager (ACM) SSL/TLS certificates for encryption in transit.
+
+Thực hiện mã hoá data trong xử lí của applitcation làm tăng độ phức tạp cho code, phải implement thêm logic mã hoá và giải mã, tốn effort.
+
+❌ Configure encryption at rest for Amazon RDS for MySQL by using AWS KMS managed keys. Configure a VPN connection to enable private connectivity to encrypt data in transit.
+
+VPN ở đây không cần thiết cho encryption in transit, chỉ cần ALB + ACM là đủ rồi
+
+🔑 Tips and tricks:
+
+Mã hoá đầu cuối thì thường nghĩ ngay đến KMS
+
+Mã hoá trên đường truyền thì sẽ nghĩ ngay đến các giao thức an toàn HTTPS TLS SSL. Đối với ALB thì implement HTTPS thông qua việc tạo HTTPS listener và liên kết với certificate trong ACM
 </details>
 
 ---
 
-### Q41. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q44. 
+A company hosts its web application on AWS using seven Amazon EC2 instances. The company requires that the IP addresses of all healthy EC2 instances be returned in response to DNS queries.
+
+Which policy should be used to meet this requirement?
+- Simple routing policy
+- Geocation routing policy
+- Latency routing policy
+- Multivalue routing policy
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty chạy web application trên 7 EC2 instances
+
+Yêu cầu: DNS queries phải trả về IP addresses của TẤT CẢ các EC2 instances đang healthy
+
+Cần chọn Route 53 routing policy phù hợp
+
+✅ Đáp án đúng:
+
+Multivalue routing policy
+
+Đây là policy duy nhất cho phép trả về nhiều IP addresses (up to 8) trong response
+
+Hỗ trợ health checks → chỉ trả về IP của các instances healthy, tự động loại bỏ unhealthy instances
+
+Đáp ứng yêu cầu cho use case này: trả về multiple healthy endpoints cho DNS queries
+
+Ví dụ về setting của multi-answer values (có health check)
+
+![img](https://static.cloudexam.pro/courses/5/1766849110510-jyaqaj2a-CleanShot_2025-12-28_at_00.21.53_2x.png)
+
+Các đáp án sai:
+
+❌ Simple routing policy
+
+Mặc dù cho phép setting nhiều value tương tự như Multi-Answer nhưng không có healthcheck
+
+Không thể phân biệt và loại bỏ unhealthy instances → có thể trả về IP của instances đã ko còn hoạt động nữa
+
+❌ Latency routing policy
+
+Routes traffic dựa trên lowest latency (độ trễ thấp nhất)
+
+Chỉ trả về MỘT record (endpoint có latency thấp nhất), không phải tất cả IPs
+
+Không đáp ứng yêu cầu "return all healthy IPs"
+
+❌ Geolocation routing policy
+
+Routes dựa trên geographic location của user
+
+Chỉ trả về MỘT record phù hợp với location, không phải multiple IPs
+
+Không đáp ứng yêu cầu "return all healthy IPs"
+
+🔑 Tips and tricks:
+
+"Return ALL IPs" + "Healthy instances" → Multivalue routing policy
+
+"Return ONE IP based on latency" → Latency routing policy
+
+"Return ONE IP based on location" → Geolocation routing policy
+
+"Simple routing" + "No health check needed" → Simple routing policy
+
+Reference:
+
+What is the difference between a multivalue answer routing policy and a simple routing policy?
 </details>
 
 ---
 
-### Q42. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q45. 
+A weather forecasting company collects temperature readings from various sensors on a continuous basis. An existing data ingestion process collects the readings and aggregates the readings into larger Apache Parquet files. Then the process encrypts the files by using client-side encryption with KMS managed keys (CSE-KMS). Finally, the process writes the files to an Amazon S3 bucket with separate prefixes for each calendar day.
+
+The company wants to run occasional SQL queries on the data to take sample moving averages for a specific calendar day.
+
+Which solution will meet these requirements MOST cost-effectively?
+- Configure Amazon Redshift to read the encrypted files. Use Redshift Spectrum and Redshift query editor v2 to run SQL queries on the data directly in Amazon S3.
+- Use Amazon S3 Select to run SQL queries on the data directly in Amazon S3.
+- Configure Amazon EMR Serverless to read the encrypted files. Use Apache SparkSQL to run SQL queries on the data directly in Amazon S3.
+- Configure Amazon Athena to read the encrypted files. Run SQL queries on the data directly in Amazon S3.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty dự báo thời tiết thu thập dữ liệu từ các cảm biến
+
+Dữ liệu được tổng hợp thành file Apache Parquet
+
+Mã hóa bằng CSE-KMS và lưu trữ trên S3 với prefix theo ngày (phân chia folder s3 theo ngày)
+
+Thỉnh thoảng chạy truy vấn SQL (occasional SQL queries) trên các dữ liệu đó
+
+Yêu cầu: giải pháp tiết kiệm chi phí nhất (MOST cost-effectively)
+
+✅ Đáp án đúng:
+
+Configure Amazon Athena to read the encrypted files. Run SQL queries on the data directly in Amazon S3.
+
+Athena là dịch vụ serverless cho phép query data trực tiếp trên S3. Vì là serverless nên sẽ thích hợp cho việc truy vấn occasional (không thường xuyên).
+
+Athena chỉ cần trả tiền theo lượng dữ liệu scan thực tế, không có chi phí cố định. Ngoài ra có performance cao tương thích với Parquet và có support mã hoá client CSE-KMS encryption.
+
+Các đáp án sai:
+
+❌ Use Amazon S3 Select to run SQL queries on the data directly in Amazon S3.
+
+→ S3 Select không hỗ trợ Apache Parquet format và không hỗ trợ CSE-KMS encryption. Chỉ hỗ trợ CSV, JSON và unencrypted data.
+
+❌ Configure Amazon Redshift to read the encrypted files. Use Redshift Spectrum and Redshift query editor v2 to run SQL queries on the data directly in Amazon S3.
+
+→ Redshift không phải serverless, cần chạy liên tục nên cả khi không sử dụng sẽ vẫn bị tính phí, không phù hợp với use case thỉnh thoảng truy vấn.
+
+❌ Configure Amazon EMR Serverless to read the encrypted files. Use Apache SparkSQL to run SQL queries on the data directly in Amazon S3.
+
+→ EMR Serverless vẫn đắt hơn Athena trong use case thỉnh thoảng truy vấn. Hơn nữa setup cũng setup phức tạp, query đơn giản thì cũng không cần đến Apache Spark.
+
+🔑 Tips and tricks:
+
+Việc query data trên S3 thỉnh thoảng, không thường xuyên thì nghĩ ngay đến Amazon Athena
 </details>
 
 ---
 
-### Q43. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q46. 
+A company hosts an application on AWS. The application gives users the ability to upload photos and store the photos in an Amazon S3 bucket. The company wants to use Amazon CloudFront and a custom domain name to upload the photo files to the S3 bucket in the eu-west-1 Region.
+
+Which solution will meet these requirements? (Choose two.)
+- Use AWS Certificate Manager (ACM) to create a public certificate in the us-east-1 Region. Use the certificate in CloudFront.
+- Use AWS Certificate Manager (ACM) to create a public certificate in eu-west-1. Use the certificate in CloudFront.
+- Configure Amazon S3 to allow uploads from CloudFront origin access control (OAC).
+- Configure Amazon S3 to allow uploads from CloudFront. Configure S3 Transfer Acceleration.
+- Configure Amazon S3 to allow uploads from CloudFront. Configure an Amazon S3 website endpoint.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty muốn dùng CloudFront kết hợp với S3 bucket
+
+S3 bucket nằm ở eu-west-1 Region
+
+Cần giải pháp cho phép sử dụng custom domain với CloudFront
+
+✅ Đáp án đúng:
+
+Use AWS Certificate Manager (ACM) to create a public certificate in the us-east-1 Region. Use the certificate in CloudFront.
+
+Mặc dù S3 bucket nằm ở region eu-west-1 nhưng CloudFront vẫn yêu cầu SSL certificate phải được tạo ở us-east-1 (N. Virginia) để sử dụng custom domain. Đây là requirement bắt buộc của CloudFront.
+
+Configure Amazon S3 to allow uploads from CloudFront origin access control (OAC).
+
+OAC là cách thức được AWS khuyến nghị để giới hạn việc truy cập đến S3 bắt buộc phải thông qua CloudFront, từ đó giúp tăng tính security, tránh việc người dùng truy cập trực tiếp đến S3 mà bỏ qua CloudFront.
+
+
+![img](https://static.cloudexam.pro/courses/5/1757088527679-102oagl7-CleanShot_2025-09-06_at_01.08.20.png)
+
+Các đáp án sai:
+
+❌ Use AWS Certificate Manager (ACM) to create a public certificate in eu-west-1. Use the certificate in CloudFront.
+
+→ Sai region. CloudFront chỉ chấp nhận certificate từ us-east-1, không phải eu-west-1.
+
+❌ Configure Amazon S3 to allow uploads from CloudFront. Configure S3 Transfer Acceleration.
+
+→ Transfer Acceleration dùng cho việc tăng tốc upload trực tiếp lên S3, không cần thiết ở đây.
+
+❌ Configure Amazon S3 to allow uploads from CloudFront. Configure an Amazon S3 website endpoint.
+
+→ S3 đã liên kết với CloudFront rồi thì không cần enable host web trên S3 nữa. Như thế thì phải mở bucket public, không tốt về mặt security, hơn nữa cũng không liên quan đến việc setting custom domain ở đây.
+
+🔑 Tips and tricks:
+
+Lưu ý cerfiticate cho CloudFront bắt buộc phải tạo ở region us-east-1
 </details>
 
 ---
 
-### Q44. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q47. 
+A company is designing a web application with an internet-facing Application Load Balancer (ALB).
+
+The company needs the ALB to receive HTTPS web traffic from the public internet. The ALB must send only HTTPS traffic to the web application servers hosted on the Amazon EC2 instances on port 443. The ALB must perform a health check of the web application servers over HTTPS on port 8443.
+
+Which combination of configurations of the security group that is associated with the ALB will meet these requirements? (Choose three.)
+- Allow HTTPS outbound traffic to the web application instances for port 443.
+- Allow HTTPS outbound traffic to the web application instances for the health check on port 8443.
+- Allow HTTPS inbound traffic from the web application instances for the health check on port 8443.
+- Allow all outbound traffic to 0.0.0.0/0 for port 443.
+- Allow HTTPS inbound traffic from 0.0.0.0/0 for port 443.
+- Allow HTTPS inbound traffic from the web application instances for port 443.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty thiết kế web app với internet-facing ALB
+
+ALB nhận HTTPS traffic từ internet
+
+ALB gửi HTTPS traffic đến EC2 trên port 443
+
+ALB thực hiện health check qua HTTPS trên port 8443
+
+Cần cấu hình security group cho ALB
+
+✅ Đáp án đúng:
+
+Allow HTTPS inbound traffic from 0.0.0.0/0 for port 443
+
+→ ALB cần nhận traffic HTTPS từ internet, nên phải allow inbound từ anywhere (0.0.0.0/0) trên port 443
+
+Allow HTTPS outbound traffic to the web application instances for port 443
+
+→ ALB cần gửi HTTPS đến EC2 instances, nên cần outbound rule đến web servers port 443
+
+Allow HTTPS outbound traffic to the web application instances for the health check on port 8443
+
+→ ALB cần thực hiện health check qua HTTPS port 8443, nên cần outbound rule đến instances port 8443
+
+![img](https://static.cloudexam.pro/courses/5/1757089119641-vg9y2rio-CleanShot_2025-09-06_at_01.18.23.png)
+
+Các đáp án sai:
+
+❌ Allow all outbound traffic to 0.0.0.0/0 for port 443
+
+→ Sai. ALB chỉ cần gửi traffic đến web instances cụ thể, không phải toàn bộ internet (0.0.0.0/0)
+
+❌ Allow HTTPS inbound traffic from the web application instances for port 443
+
+→ Sai. ALB chỉ nhận inbound traffic từ internet, chứ không nhận inbound traffic từ EC2 (outbound đến Ec2 mới đúng)
+
+❌ Allow HTTPS inbound traffic from the web application instances for the health check on port 8443
+
+→ Sai. Tương tự như đáp án trên, Health check là ALB gửi request đến instances, chứ không phải instances gửi về ALB. Do đó không cần inbound cho ALB trên port 8443.
 </details>
 
 ---
 
-### Q45. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q48. 
+An online photo-sharing company stores its photos in an Amazon S3 bucket that exists in the us-west-1 Region. The company needs to store a copy of all new photos in the us-east-1 Region.
+
+Which solution will meet this requirement with the LEAST operational effort?
+- Create a second S3 bucket in us-east-1. Configure S3 event notifications on object creation and update events to invoke an AWS Lambda function to copy photos from the existing S3 bucket to the second S3 bucket.
+- Create a second S3 bucket in us-east-1. Use S3 Cross-Region Replication to copy photos from the existing S3 bucket to the second S3 bucket.
+- Create a cross-origin resource sharing (CORS) configuration of the existing S3 bucket. Specify us-east-1 in the CORS rule's AllowedOrigin element.
+- Create a second S3 bucket in us-east-1 across multiple Availability Zones. Create an S3 Lifecycle rule to save photos into the second S3 bucket.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty lưu trữ ảnh trong S3 bucket ở us-west-1
+
+Cần sao chép tất cả ảnh mới sang us-east-1 Region
+
+Yêu cầu: giải pháp với ít công sức vận hành nhất (LEAST operational effort)
+
+✅ Đáp án đúng:
+
+Create a second S3 bucket in us-east-1. Use S3 Cross-Region Replication to copy photos from the existing S3 bucket to the second S3 bucket.
+
+S3 Cross-Region Replication (CRR) là tính năng managed service của AWS, tự động sao chép objects giữa các regions mà không cần can thiệp thủ công. Chỉ cần cấu hình một lần và AWS lo phần còn lại.
+
+![img](https://static.cloudexam.pro/courses/5/1757089877774-aonlbim2-image.png)
+
+
+Các đáp án sai:
+
+❌ Create a cross-origin resource sharing (CORS) configuration of the existing S3 bucket. Specify us-east-1 in the CORS rule's AllowedOrigin element.
+
+→ Sai. CORS chỉ dùng để cấu hình cho phép access các file trên s3 từ các Web domain khác, không liên quan đến việc sao chép dữ liệu giữa các region.
+
+❌ Create a second S3 bucket in us-east-1 across multiple Availability Zones. Create an S3 Lifecycle rule to save photos into the second S3 bucket.
+
+→ Sai. S3 Lifecycle chỉ dùng để chuyển đổi object qua lại giữa các storage class hoặc xóa objects, tất cả đều trong cùng một S3 bucket. Không thể copy objects sang region khác.
+
+❌ Create a second S3 bucket in us-east-1. Configure S3 event notifications on object creation and update events to invoke an AWS Lambda function to copy photos from the existing S3 bucket to the second S3 bucket.
+
+→ Sai về yêu cầu tốn ít operational effort do phải viết code Lambda và quản lý function. Tốn nhiều công sức hơn so với việc sử dụng chức năng Replication có sẵn của S3.
+
+🔑 Tips and tricks:
+
+S3 cần copy sang region khác thì nghĩ đến S3-cross region replication
 </details>
 
 ---
 
-### Q46. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q49. 
+A company is planning to deploy a business-critical application in the AWS Cloud. The application requires durable storage with consistent, low-latency performance.
+
+Which type of storage should a solutions architect recommend to meet these requirements?
+
+- Instance store volume
+- Amazon ElastiCache for Memcached cluster
+- Provisioned IOPS SSD Amazon Elastic Block Store (Amazon EBS) volume
+- Throughput Optimized HDD Amazon Elastic Block Store (Amazon EBS) volume
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Ứng dụng quan trọng cho doanh nghiệp (business-critical)
+
+Cần solution storage có tính bền vững (durable), perfomance cao, độ trễ thấp
+
+✅ Đáp án đúng:
+
+Provisioned IOPS SSD Amazon Elastic Block Store (Amazon EBS) volume
+
+Provisioned IOPS SSD EBS là block storage có độ ổn định tốt, performance cao, hiệu suất IOPS nhất quán, cung cấp độ trễ thấp cho các ứng dụng quan trọng do đó sẽ là lựa chọn phù hợp cho use case ở đây.
+
+Các đáp án sai:
+
+❌ Instance store volume
+
+Không có tính lưu trữ bền - bị dữ liệu mất khi instance stop/terminate
+
+Chỉ phù hợp cho lưu trữ data tạm, không phù hợp cho ứng dụng business-critical
+
+❌ Amazon ElastiCache for Memcached cluster
+
+Đây là caching service, không phải service chuyên để lưu trữ data
+
+❌ Throughput Optimized HDD Amazon Elastic Block Store (Amazon EBS) volume
+
+Băng thông kém hơn và độ trễ không tốt bằng Provisioned IOPS SSD EBS, do đó không phù hợp
 </details>
 
 ---
 
-### Q47. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q50. 
+A company has deployed its newest product on AWS. The product runs in an Auto Scaling group behind a Network Load Balancer. The company stores the product’s objects in an Amazon S3 bucket.
+
+The company recently experienced malicious attacks against its systems. The company needs a solution that continuously monitors for malicious activity in the AWS account, workloads, and access patterns to the S3 bucket. The solution must also report suspicious activity and display the information on a dashboard.
+
+Which solution will meet these requirements?"
+
+- Configure AWS Config to monitor and report findings to Amazon EventBridge.
+- Configure Amazon GuardDuty to monitor and report findings to AWS Security Hub.
+- Configure Amazon Inspector to monitor and report findings to AWS CloudTrail.
+- Configure Amazon Macie to monitor and report findings to AWS Config.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty cần giám sát liên tục (continuously monitors) các hoạt động trong AWS account, workloads và việc truy cập tới S3 bucket
+
+Yêu cầu báo cáo hoạt động đáng ngờ (report suspicious activity) và hiển thị các thông tin phát hiện được lên dashboard
+
+✅ Đáp án đúng:
+
+Configure Amazon GuardDuty to monitor and report findings to AWS Security Hub.
+
+GuardDuty là threat detection service giúp phát hiện hoạt động bất thường trong account thông qua việc phân tích CloudTrail events, DNS logs, VPC Flow Logs.
+
+Security Hub cung cấp dashboad trung tâm để tổng hợp và hiển thị các báo cáo về security từ nhiều service khác nhau.
+
+Việc sử dụng kết hợp 2 service này sẽ thoả mãn yêu cầu đề bài.
+
+Các đáp án sai:
+
+❌ Configure Amazon Macie to monitor and report findings to AWS Config.
+
+Macie là service AI giúp phát hiện các thông tin cá nhân của người dùng (PII) trên S3, không có khả năng phát hiện các hoạt động bất thường trong account.
+
+❌ Configure Amazon Inspector to monitor and report findings to AWS CloudTrail.
+
+Inspector chỉ giúp phát hiện các lỗ hổng bảo mật (vulnerabilities) trong EC2 instances và container images, không có khả năng giám sát và phát hiện các hoạt động bất thường.
+
+❌ Configure AWS Config to monitor and report findings to Amazon EventBridge.
+
+Config chỉ giúp ghi lại lịch sử thay đổi setting của resource và đặt ra quy định để đảm bảo tuần thủ, không có khả năng giám sát và phát hiện các hoạt động bất thường.
+
+🔑 Tips and tricks:
+
+Phát hiện hoạt động bất thường, đáng ngờ "malicious" thì nghĩ đến GuardDuty
+
+Tổng hợp và quản lý các phát hiện security (security findings) thì nghĩ đến Security Hub
 </details>
 
 ---
 
-### Q48. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q51. 
+A company currently runs an on-premises application that uses ASP.NET on Linux machines. The application is resource-intensive and serves customers directly.
+
+The company wants to modernize the application to .NET. The company wants to run the application on containers and to scale based on Amazon CloudWatch metrics. The company also wants to reduce the time spent on operational maintenance activities.
+
+Which solution will meet these requirements with the LEAST operational overhead?
+- Use AWS App2Container to containerize the application. Use an AWS CloudFormation template to deploy the application to Amazon Elastic Container Service (Amazon ECS) on Amazon EC2 instances.
+- Use AWS App2Container to containerize the application. Use an AWS CloudFormation template to deploy the application to Amazon Elastic Container Service (Amazon ECS) on AWS Fargate.
+- Use AWS App Runner to containerize the application. Use App Runner to deploy the application to Amazon Elastic Container Service (Amazon ECS) on AWS Fargate.
+- Use AWS App Runner to containerize the application. Use App Runner to deploy the application to Amazon Elastic Kubernetes Service (Amazon EKS) on Amazon EC2 instances.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty hiện đang chạy ứng dụng ASP.NET trên Linux và muốn chuyển qua chạy containers
+
+Yêu cầu giảm thiểu operational overhead (effort vận hành)
+
+✅ Đáp án đúng:
+
+Use AWS App2Container to containerize the application. Use an AWS CloudFormation template to deploy the application to Amazon Elastic Container Service (Amazon ECS) on AWS Fargate.
+
+App2Container là service chuyên dụng để container hoá các ứng dụng một cách tự động, giảm effort thủ công
+
+ECS Fargate là serverless platform để chạy container mà không cần quản lý hạ tầng bên dưới, từ đó giảm thiểu operational overhead
+
+CloudFormation là service IaC (Infrastructure as Code), cho phép triển khai kiến trúc tự động hoá hoàn toàn thông qua code, do đó cũng giúp giảm thiểu operational overhead
+
+Các đáp án sai:
+
+❌ Use AWS App2Container to containerize the application. Use an AWS CloudFormation template to deploy the application to Amazon Elastic Container Service (Amazon ECS) on Amazon EC2 instances.
+
+→ Sai vì lựa chọn chạy ECS trên EC2 sẽ làm tăng operational overhead so với Fargate
+
+❌ Use AWS App Runner to containerize the application. Use App Runner to deploy the application to Amazon Elastic Container Service (Amazon ECS) on AWS Fargate.
+→ App Runner là service cung cấp nền tảng chạy container built-in và tự động hoá dễ dàng, mặc dù về tính customize ít hơn ECS. App Runner không có chức năng container hoá (containerize the application)
+
+❌ Use AWS App Runner to containerize the application. Use App Runner to deploy the application to Amazon Elastic Kubernetes Service (Amazon EKS) on Amazon EC2 instances.
+
+→ Sai vì lý do như câu trên trên, App Runner không có chức năng container hoá (containerize the application). Hơn nữa việc chạy EKS trên EC2 so với ECS sẽ tốn effort hơn nhiều.
+
+🔑 Tips and tricks:
+
+Solution cần ít effort vận hành thì các đáp án sẽ không ưu tiên chọn EC2
+
+Đối với container thì sẽ ưu tiên sử dụng AWS Fargate
 </details>
 
 ---
 
-### Q49. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q52.
+A finance company uses an on-premises search application to collect streaming data from various producers. The application provides real-time updates to search and visualization features.
+
+The company is planning to migrate to AWS and wants to use an AWS native solution.
+
+Which solution will meet these requirements?
+- Use Amazon Kinesis Data Streams to ingest and process the data streams to Amazon OpenSearch Service. Use OpenSearch Service to search the data. Use Amazon QuickSight to create visualizations.
+- Use Amazon Elastic Kubernetes Service (Amazon EKS) to ingest and process the data streams to Amazon DynamoDB for storage. Use Amazon CloudWatch to create graphical dashboards to search and visualize the data.
+- Use Amazon EMR to ingest and process the data streams to Amazon Redshift for storage. Use Amazon Redshift Spectrum to search the data. Use Amazon QuickSight to create visualizations.
+- Use Amazon EC2 instances to ingest and process the data streams to Amazon S3 buckets tor storage. Use Amazon Athena to search the data. Use Amazon Managed Grafana to create visualizations.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty có ứng dụng ở on-premises thu thập streaming data từ nhiều nguồn
+
+Ứng dụng cung cấp các data real-time cho tính năng search và visualization
+
+Muốn migrate lên AWS và ưu tiên sử dụng AWS native solution
+
+✅ Đáp án đúng:
+
+Use Amazon Kinesis Data Streams to ingest and process the data streams to Amazon OpenSearch Service. Use OpenSearch Service to search the data. Use Amazon QuickSight to create visualizations.
+
+→ Có thể thấy bài toán đang có một pipeline cơ bản bao gồm các bước ingest (thu thập data) → process (xử lý) → search (tìm kiếm data) → visualize (hiển thị hoá) và cần AWS native service tương đương với các bước này, do đó các service bên dưới sẽ là solution phù hợp nhất:
+
+Kinesis Data Streams: Service dành cho việc streaming data và processing data trong thời gian thực (real-time)
+
+OpenSearch Service: Service chuyên cho việc search data, support search data real-time
+
+QuickSight: AWS native service cho việc hiển thị hoá data, support liên kết với OpenSearch
+
+Toàn bộ đều là AWS managed services, đáp ứng yêu cầu "AWS native solution"
+
+Các đáp án sai:
+
+❌ Use Amazon EC2 instances to ingest and process the data streams to Amazon S3 buckets for storage. Use Amazon Athena to search the data. Use Amazon Managed Grafana to create visualizations.
+
+→ EC2 không phải service chuyên dụng cho data streaming, ngoài ra Athena không phù hợp cho real-time search trên streaming data (chủ yếu cho batch queries)
+
+❌ Use Amazon EMR to ingest and process the data streams to Amazon Redshift for storage. Use Amazon Redshift Spectrum to search the data. Use Amazon QuickSight to create visualizations.
+
+→ EMR + Redshift phù hợp cho data warehouse và batch processing, không phù hợp cho use case real-time streaming & search
+
+❌ Use Amazon Elastic Kubernetes Service (Amazon EKS) to ingest and process the data streams to Amazon DynamoDB for storage. Use Amazon CloudWatch to create graphical dashboards to search and visualize the data.
+
+→ EKS không phải service chuyên dụng cho data streaming, DynamoDB không phải là service đóng vai trò là search engine, CloudWatch không phải service dùng dể hiển thị hoá data.
+
+🔑 Tips and tricks:
+
+Keyword thời gian thực "real-time" thì thường sẽ nghĩ đến Kinesis Data Streams
+
+Keyword "search, real-time update" thì thường sẽ nghĩ đến OpenSearch
+
+Keyword hiển thị hoá "visualization" thì thường sẽ nghĩ đến QuickSight
 </details>
 
 ---
 
-### Q50. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q53. 
+A solutions architect is designing an application that helps users fill out and submit registration forms. The solutions architect plans to use a two-tier architecture that includes a web application server tier and a worker tier.
+
+The application needs to process submitted forms quickly. The application needs to process each form exactly once. The solution must ensure that no data is lost.
+
+Which solution will meet these requirements?
+- Use an Amazon Simple Queue Service (Amazon SQS) FIFO queue between the web application server tier and the worker tier to store and forward form data.
+- Use an Amazon Simple Queue Service (Amazon SQS) standard queue between the web application server tier and the worker tier to store and forward form data.
+- Use an AWS Step Functions workflow. Create a synchronous workflow between the web application server tier and the worker tier that stores and forwards form data.
+- Use an Amazon API Gateway HTTP API between the web application server tier and the worker tier to store and forward form data.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Ứng dụng cho phép user điền và submit forms
+
+Dự định build kiến trúc 2 tầng: web application server tier và worker tier
+
+Yêu cầu: xử lý mỗi form đúng 1 lần (exactly once)
+
+Yêu cầu: không được mất data (no data loss)
+
+✅ Đáp án đúng:
+
+Use an Amazon Simple Queue Service (Amazon SQS) FIFO queue between the web application server tier and the worker tier to store and forward form data.
+
+Do yêu cầu xử lý không được mất data (no data loss) nên sẽ cần implement SQS queue vào giữa 2 tầng web application server tier và worker tier như kiến trúc bên dưới.
+
+![img](https://static.cloudexam.pro/courses/5/1757170597193-nblsasnw-image.png)
+
+
+Ở đây sẽ sử dụng SQS FIFO queue vì có cơ chế deduplication để tránh xử lý trùng lặp, từ đó đảm bảo được việc chỉ xử lý message đúng 1 lần duy nhất (exactly-once processing)
+
+Các đáp án sai:
+
+❌ Use an Amazon API Gateway HTTP API between the web application server tier and the worker tier to store and forward form data.
+
+→ Như vậy thì API Gateway đóng vai trò là một api trung gian giữa 2 tầng, hoàn toàn không có cơ chế đảm bảo data không bị mất (no data loss) như SQS
+
+❌ Use an Amazon Simple Queue Service (Amazon SQS) standard queue between the web application server tier and the worker tier to store and forward form data.
+
+→ Standard queue chỉ đảm bảo cơ chế delivery message ít nhất 1 lần (at-least-once delivery), do đó có thể bị xử lý trùng lặp nhiều hơn 1 lần, không đáp ứng yêu cầu "exactly once"
+
+❌ Use an AWS Step Functions workflow. Create a synchronous workflow between the web application server tier and the worker tier that stores and forwards form data.
+
+→ Synchronous workflow bắt buộc web tier phải chờ cho đến khi worker xử lý xong, do đó sẽ bị bottleneck, 2 tier không thể scale độc lập và sẽ không đáp ứng yêu cầu xử lý nhanh
+
+🔑 Tips and tricks:
+
+Đảm bảo data không bị mất thì sẽ nghĩ đến SQS
+
+Đảm bảo được việc chỉ xử lý message đúng 1 lần duy nhất (exactly-once processing) thì nghĩ đến SQS FIFO
 </details>
 
 ---
 
-### Q51. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q54. 
+A company is building a data analysis platform on AWS by using AWS Lake Formation. The platform will ingest data from different sources such as Amazon S3 and Amazon RDS. The company needs a secure solution to prevent access to portions of the data that contain sensitive information.
+
+Which solution will meet these requirements with the LEAST operational overhead?
+- Create an IAM role that includes permissions to access Lake Formation tables.
+- Create data filters to implement row-level security and cell-level security.
+- Create an AWS Lambda function that periodically queries and removes sensitive information from Lake Formation tables.
+- Create an AWS Lambda function that removes sensitive information before Lake Formation ingests the data.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty xây dựng nền tảng phân tích dữ liệu (data analysis platform) trên AWS với AWS Lake Formation
+
+Dữ liệu từ nhiều nguồn: Amazon S3 và Amazon RDS
+
+Yêu cầu: ngăn chặn truy cập (prevent access) vào các phần dữ liệu chứa thông tin nhạy cảm (sensitive information)
+
+Ưu tiên: ít tác vụ vận hành nhất (LEAST operational overhead)
+
+✅ Đáp án đúng:
+
+Create data filters to implement row-level security and cell-level security.
+
+→ Lake Formation cung cấp tính năng data filters tích hợp sẵn để kiểm soát truy cập ở mức hàng và ô một cách tự động. Đây là giải pháp native, không cần code thêm hay quản lý infrastructure.
+
+Các đáp án sai:
+
+❌ Create an IAM role that includes permissions to access Lake Formation tables.
+
+→ IAM role chỉ kiểm soát quyền truy cập table-level, không thể ẩn sensitive data ở mức row/cell cụ thể.
+
+❌ Create an AWS Lambda function that removes sensitive information before Lake Formation ingests the data.
+
+→ Tốn effort code thêm lambda. Tăng operational overhead và độ phức tạp không cần thiết.
+
+❌ Create an AWS Lambda function that periodically queries and removes sensitive information from Lake Formation tables.
+
+→ Tốn effort code thêm lambda. Tăng operational overhead và độ phức tạp không cần thiết.
+
+🔑 Tips and tricks:
+
+Sử dụng Lake Formation mà muốn hạn chế quyền truy cập đến 1 phần data (theo hàng hoặc cột) thì sử dụng fine-grained access control với data filter - đây là chức năng built-in có sẵn.
+
+📖 Reference:
+https://docs.aws.amazon.com/lake-formation/latest/dg/access-control-fine-grained.html
 </details>
 
 ---
 
-### Q52. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q55. 
+
+A company is migrating an application from an on-premises environment to AWS. The application will store sensitive data in Amazon S3. The company must encrypt the data before storing the data in Amazon S3.
+
+Which solution will meet these requirements?
+- Encrypt the data by using client-side encryption with Amazon S3 managed keys.
+- Encrypt the data by using client-side encryption with customer managed keys.
+- Encrypt the data by using server-side encryption with AWS KMS keys (SSE-KMS).
+- Encrypt the data by using server-side encryption with customer-provided keys (SSE-C).
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty lưu data trong Amazon S3 và có yêu cầu data cần được mã hoá trước khi lưu vào S3
+
+✅ Đáp án đúng:
+
+Encrypt the data by using client-side encryption with customer managed keys.
+
+Đề yêu cầu rõ ràng là "encrypt before storing" - tức là data phải được mã hóa trước khi gửi lên S3. Do đó sử dụng Client-side encryption để đảm bảo dữ liệu được mã hóa tại client trước khi upload.
+
+Các đáp án sai:
+
+❌ Encrypt the data by using server-side encryption with AWS KMS keys (SSE-KMS)
+
+→ Sai vì đây là server-side encryption - data được mã hóa SAU KHI đã đến S3, không phải "before storing"
+
+❌ Encrypt the data by using server-side encryption with customer-provided keys (SSE-C)
+
+→ Sai vì cũng là server-side encryption.
+
+❌ Encrypt the data by using client-side encryption with Amazon S3 managed keys
+
+→ S3 managed keys không tồn tại cho client-side encryption. S3 managed keys chỉ dùng cho server-side encryption (SSE-S3)
+
+🔑 Tips and tricks:
+
+Mã hoá TRƯỚC khi lưu trữ thì nghĩ ngay đến Client Side Encryption
 </details>
 
 ---
 
-### Q53. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q56.
+A company has several on-premises Internet Small Computer Systems Interface (ISCSI) network storage servers. The company wants to reduce the number of these servers by moving to the AWS Cloud. A solutions architect must provide low-latency access to frequently used data and reduce the dependency on on-premises servers with a minimal number of infrastructure changes.
+
+Which solution will meet these requirements?
+- Deploy an AWS Storage Gateway volume gateway that is configured with cached volumes.
+- Deploy an Amazon S3 File Gateway.
+- Deploy Amazon Elastic Block Store (Amazon EBS) storage with backups to Amazon S3.
+- Deploy an AWS Storage Gateway volume gateway that is configured with stored volumes.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty có nhiều iSCSI storage servers on-premises
+
+Muốn giảm số lượng servers bằng cách chuyển lên AWS
+
+Yêu cầu: low-latency access cho dữ liệu thường xuyên sử dụng
+
+Giảm phụ thuộc vào on-premises với ít thay đổi về kiến trúc (minimal infrastructure changes)
+
+✅ Đáp án đúng:
+
+Deploy an AWS Storage Gateway volume gateway that is configured with cached volumes.
+
+Cached volumes lưu dữ liệu chính trên S3, cache dữ liệu hay được truy cập tại local → đảm bảo truy cập độ trễ thấp (low-latency) cho data hay được truy cập
+
+AWS Storage Gateway volume gateway vẫn giữ nguyên iSCSI interface → do đó ít thay đổi về kiến trúc (minimal infrastructure changes)
+
+Giảm dependency vào on-premises vì phần lớn storage sẽ được chuyển lên AWS S3
+
+![img](https://static.cloudexam.pro/courses/5/1756991188130-0brb4wc2-CleanShot_2025-09-04_at_22.05.39.png)
+
+Các đáp án sai:
+
+❌ Deploy an Amazon S3 File Gateway
+
+S3 File Gateway dành cho file-based access (NFS/SMB), không support iSCSI
+
+❌ Deploy Amazon EBS storage with backups to Amazon S3
+
+Vô lý vì EBS chỉ gắn được với EC2, không thể gắn trực tiếp từ phía on-premises qua iSCSI
+
+❌ Deploy an AWS Storage Gateway volume gateway that is configured with stored volumes
+
+Sai vì stored volumes lưu vẫn lưu toàn bộ data ở on-premises → không giảm được phụ thuộc storage ở local.
+
+🔑 Tips and tricks:
+
+Khi cần solution storage cho local mà support dạng block storage thì sẽ nghĩ đến Volume Gateway. Keyword: iSCSI, Block Storage, Volume
 </details>
 
 ---
 
-### Q54. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q57. 
+A company will migrate 10 PB of data to Amazon S3 in 6 weeks. The current data center has a 500 Mbps uplink to the internet. Other on-premises applications share the uplink. The company can use 80% of the internet bandwidth for this one-time migration task.
+
+Which solution will meet these requirements?
+- Use the AWS CLI and multiple copy processes to send the data directly to Amazon S3.
+- Order multiple AWS Snowball devices. Copy the data to the devices. Send the devices to AWS to copy the data to Amazon S3.
+- Use rsync to transfer the data directly to Amazon S3.
+- Configure AWS DataSync to migrate the data to Amazon S3 and to automatically verify the data.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Cần migrate 10 PB data trong 6 tuần lên S3
+
+Băng thông hiện tại là 500 Mbps tuy nhiên chỉ có thể dùng 80% bandwidth (400 Mbps available)
+
+Cần tìm giải pháp phù hợp cho large-scale migration
+
+✅ Đáp án đúng:
+
+Order multiple AWS Snowball devices. Copy the data to the devices. Send the devices to AWS to copy the data to Amazon S3.
+
+10 PB là dung lượng cực lớn. Với 400 Mbps băng thông thì, việc transfer qua internet sẽ mất khoảng 208 ngày (tính toán: 10 PB = 80,000,000 Gb ÷ 400 Mbps ÷ 86,400 giây/ngày), vượt xa 6 tuần yêu cầu. Do đó sẽ cần solution migrate qua đường vật lý.
+
+Snowball Edge cho phép việc migrate data lên S3 qua đường vật lý thông qua việc order và shipping thiết bị đến AWS. Mỗi thiết bị có thể transfer 210TB data, có thể order nhiều thiết bị cùng lúc để việc migration diễn ra nhanh chóng, với timeline 6 tuần thì hoàn toàn khả thi
+
+Các đáp án sai:
+
+❌ Configure AWS DataSync to migrate the data to Amazon S3
+
+→ DataSync vẫn phải transfer qua internet với và bị giới hạn bởi băng thông mạng hiện có, không giải quyết được vấn đề bottleneck về thời gian.
+
+❌ Use rsync to transfer the data directly to Amazon S3
+→ Tương tự như trên, vẫn phải transfer qua internet và bị giới hạn bởi băng thông mạng hiện có.
+
+❌ Use the AWS CLI and multiple copy processes → Tương tự như trên, vẫn phải transfer qua internet và bị giới hạn bởi băng thông mạng hiện có.
+
+🔑 Tips and tricks:
+
+Với lượng data hàng trăm TB hay hàng PB thì việc migrate hầu như sẽ thực hiện qua Snowball Edge
 </details>
 
 ---
 
-### Q55. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q58. 
+A company is planning to migrate a TCP-based application into the company's VPC. The application is publicly accessible on a nonstandard TCP port through a hardware appliance in the company's data center. This public endpoint can process up to 3 million requests per second with low latency. The company requires the same level of performance for the new public endpoint in AWS.
+
+What should a solutions architect recommend to meet this requirement?
+- Deploy an Amazon API Gateway API that is configured with the TCP port that the application requires. Configure AWS Lambda functions with provisioned concurrency to process the requests.
+- Deploy an Amazon CloudFront distribution that listens on the TCP port that the application requires. Use an Application Load Balancer as the origin.
+- Deploy an Application Load Balancer (ALB). Configure the ALB to be publicly accessible over the TCP port that the application requires.
+- Deploy a Network Load Balancer (NLB). Configure the NLB to be publicly accessible over the TCP port that the application requires.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Migrate ứng dụng chạy giao thức TCP vào VPC
+
+Cần AWS service để cho phép truy cập vào app thông qua một public endpoint với port TCP
+
+Yêu cầu phải đáp ứng performance cao: 3 triệu requests/giây với độ trễ thấp (low latency)
+
+✅ Đáp án đúng:
+
+Deploy a Network Load Balancer (NLB). Configure the NLB to be publicly accessible over the TCP port that the application requires.
+
+NLB là service cân bằng tải traffic được thiết kế đặc biệt cho TCP / UDP traffic với ultra-high performance (hàng triệu requests/giây), độ trễ cực thấp (ultra-low latency) do đó sẽ đáp ứng yêu cầu đề bài.
+
+Các đáp án sai:
+
+❌ Deploy an Application Load Balancer (ALB). Configure the ALB to be publicly accessible over the TCP port that the application requires.
+
+→ ALB chỉ hoạt động ở Layer 7 (HTTP/HTTPS), không support TCP traffic ở Layer 4.
+
+❌ Deploy an Amazon CloudFront distribution that listens on the TCP port that the application requires. Use an Application Load Balancer as the origin.
+
+→ CloudFront chỉ support HTTP/HTTPS, không support TCP traffic.
+
+❌ Deploy an Amazon API Gateway API that is configured with the TCP port that the application requires. Configure AWS Lambda functions with provisioned concurrency to process the requests.
+
+→ CloudFront chỉ support HTTP/HTTPS, không support TCP traffic.
+
+🔑 Tips and tricks:
+
+Traffic TCP/UDP thì sẽ nghĩ đến Network Load Balancer, Global Accelerator
 </details>
 
 ---
 
-### Q56. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q59. 
+A company uses AWS to host its public ecommerce website. The website uses an AWS Global Accelerator accelerator for traffic from the internet. The Global Accelerator accelerator forwards the traffic to an Application Load Balancer (ALB) that is the entry point for an Auto Scaling group.
+
+The company recently identified a DDoS attack on the website. The company needs a solution to mitigate future attacks.
+
+Which solution will meet these requirements with the LEAST implementation effort?
+- Configure an Amazon CloudFront distribution in front of the Global Accelerator accelerator
+- Configure an AWS WAF web ACL for the Global Accelerator accelerator to block traffic by using rate-based rules
+- Configure an AWS Lambda function to read the ALB metrics to block attacks by updating a VPC network ACL
+- Configure an AWS WAF web ACL on the ALB to block traffic by using rate-based rules
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty sử dụng Global Accelerator forward traffic đến Application Load Balancer (ALB) và vừa bị tấn công DDoS
+
+Cần giải pháp giảm thiểu các cuộc tấn công tương tự trong tương lai với ít effort nhất (LEAST implementation effort)
+
+✅ Đáp án đúng:
+
+Configure an AWS WAF web ACL on the ALB to block traffic by using rate-based rules
+
+WAF là service tường lửa, cho phép tạo ra các Web ACL rule để giúp ngăn chặn các loại hình tấn công phổ biến. Trong đó có Rate-based rules có thể tự động block IP khi số request vượt quá mức cho phép trong một khoảng thời gian nhất định, từ đó giúp hạn chế tấn công DDoS.
+
+Để ngăn chặn hoàn toàn DDoS thì Shield sẽ là service chuyên dụng hợp lý hơn. Tuy nhiên trong đáp án không có nên sẽ dùng WAF thay thế. Việc implementation cũng rất đơn giản chỉ cần gắn WAF Web ACL Rule vào ALB.
+
+![img](https://static.cloudexam.pro/courses/5/1757174300861-cfec2ntq-CleanShot_2025-09-07_at_00.58.07.png)
+
+
+Các đáp án sai:
+
+❌ Configure an AWS WAF web ACL for the Global Accelerator accelerator to block traffic by using rate-based rules
+
+→ Global Accelerator không hỗ trợ tích hợp trực tiếp với AWS WAF. Cần thêm CloudFront làm layer trung gian, tăng complexity.
+
+❌ Configure an AWS Lambda function to read the ALB metrics to block attacks by updating a VPC network ACL
+
+→ Solution phức tạp, cần viết code Lambda.
+
+❌ Configure an Amazon CloudFront distribution in front of the Global Accelerator accelerator
+
+→ Thêm một layer mới (CloudFront) vào architecture hiện tại, tăng complexity và cost, hơn nữa cũng không có khả năng hạn chế DDoS
+
+🔑 Tips and tricks:
+
+WAF có thể hạn chế tấn công DDoS thông qua Rate-based rule
 </details>
 
 ---
 
-### Q57. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q60. 
+A consumer survey company has gathered data for several years from a specific geographic region. The company stores this data in an Amazon S3 bucket in an AWS Region.
+
+The company has started to share this data with a marketing firm in a new geographic region. The company has granted the firm's AWS account access to the S3 bucket. The company wants to minimize the data transfer costs when the marketing firm requests data from the S3 bucket.
+
+Which solution will meet these requirements?
+- Configure the Requester Pays feature on the company’s S3 bucket.
+- Configure S3 Cross-Region Replication (CRR) from the company’s S3 bucket to one of the marketing firm’s S3 buckets.
+- Configure the company’s S3 bucket to use S3 Intelligent-Tiering Sync the S3 bucket to one of the marketing firm’s S3 buckets.
+- Configure AWS Resource Access Manager to share the S3 bucket with the marketing firm AWS account.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty khảo sát có dữ liệu trong S3 bucket ở một AWS Region và muốn chia sẻ dữ liệu cho một công ty marketing firm ở region khác
+
+Mục tiêu là giảm thiểu chi phí transfer data (minimize data transfer costs) khi marketing firm truy cập dữ liệu
+
+✅ Đáp án đúng:
+
+Configure the Requester Pays feature on the company's S3 bucket.
+
+Requester Pays cho phép chuyển chi phí data transfer và phí request từ bucket owner sang người request data (mặc định người sở hữu S3 phải trả toàn bộ cả phí lưu trữ và phí data transfer)
+
+Marketing firm sẽ trả phí khi họ download data từ S3 bucket thay vì công ty phải trả, từ đó đáp ứng yêu cầu giảm thiểu chi phí transfer data khi marketing firm truy cập dữ liệu
+
+Mô hình trả phí cho S3 requester pay
+![img](https://static.cloudexam.pro/courses/5/1766849822348-5j43fi4l-image.png)
+
+Các đáp án sai:
+
+❌ Configure S3 Cross-Region Replication (CRR) from the company's S3 bucket to one of the marketing firm's S3 buckets.
+
+→ CRR copy data sang bucket bên region của công ty marketing firm -> giúp tiết kiệm chi phí data transfer, nhưng trường hợp này là cho bên công ty marketing firm (do request trong cùng region), không phải cho công ty cung cấp S3.
+
+❌ Configure AWS Resource Access Manager to share the S3 bucket with the marketing firm AWS account.
+
+→ RAM chỉ giúp chia sẻ quản lý quyền truy cập tài nguyên, không liên quan đến chi phí data transfer. Dữ liệu vẫn phải transfer cross-region với chi phí cao.
+
+❌ Configure the company's S3 bucket to use S3 Intelligent-Tiering Sync the S3 bucket to one of the marketing firm's S3 buckets.
+
+→ Intelligent-Tiering chỉ tối ưu chi phí storage S3 dựa trên tần suất truy cập, không giải quyết vấn đề cross-region transfer cost.
+
+🔑 Tips and tricks:
+
+Requester Pay sẽ giúp tiết kiệm chi phí request và data transfer cho người sở hữu S3
+
+Tuỳ vào việc giảm chi phí transfer cho bên nào mà đôi khi cũng có thể cân nhắc sử dụng CRR
+
+Reference:
+
+Using Requester Pays general purpose buckets for storage transfers and usage
 </details>
 
 ---
 
-### Q58. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q61. 
+A company has multiple Amazon RDS DB instances that run in a development AWS account. All the instances have tags to identify them as development resources. The company needs the development DB instances to run on a schedule only during business hours.
+
+Which solution will meet these requirements with the LEAST operational overhead?
+- Create an Amazon EventBridge rule that invokes AWS Lambda functions to start and stop the RDS instances.
+- Create AWS Systems Manager State Manager associations to start and stop the RDS instances.
+- Create an AWS Trusted Advisor report to identify RDS instances to be started and stopped. Create an AWS Lambda function to start and stop the RDS instances.
+- Create an Amazon CloudWatch alarm to identify RDS instances that need to be stopped. Create an AWS Lambda function to start and stop the RDS instances.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Nhiều RDS DB instances chạy trong development account
+
+Tất cả instances đều có gắn tags để nhận diện (development resources)
+
+Muốn instance chỉ chạy theo lịch trong giờ hành chính
+
+Yêu cầu LEAST operational overhead (ít phức tạp vận hành nhất)
+
+✅ Đáp án đúng:
+
+Create AWS Systems Manager State Manager associations to start and stop the RDS instances.
+
+State Manager là chức năng của Systems Manager được thiết kế chuyên để tự động hoá quản lý trạng thái resource.
+
+Chỉ cần tạo association với schedule expression, chọn target bằng tags, và State Manager sẽ tự động thực hiện start/stop theo thời gian định sẵn.
+
+Ít operational overhead nhất vì không cần viết code Lambda hay setup monitoring phức tạp.
+
+Các đáp án sai:
+
+❌ Create an Amazon CloudWatch alarm to identify RDS instances that need to be stopped. Create an AWS Lambda function to start and stop the RDS instances.
+
+→ CloudWatch alarm được thiết kế để giám sát & thực hiện action với metric khi vượt quá ngưỡng cho phép, không dùng cho mục đích đặt lịch vận hành RDS.
+
+❌ Create an AWS Trusted Advisor report to identify RDS instances to be started and stopped. Create an AWS Lambda function to start and stop the RDS instances.
+
+→ Trusted Advisor là service đưa ra các gợi ý về mặt vận hành, security trong account, không có chức năng vận hành RDS theo lịch.
+
+❌ Create an Amazon EventBridge rule that invokes AWS Lambda functions to start and stop the RDS instances.
+
+→ Solution hoàn toàn hợp lệ. Tuy nhiên operational overhead cao hơn vì cần viết code cho Lambda.
+
+📖 Reference:
+https://docs.aws.amazon.com/systems-manager/latest/userguide/scheduling-automations-state-manager-associations.html
 </details>
 
 ---
 
-### Q59. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q62. 
+A global ecommerce company runs its critical workloads on AWS. The workloads use an Amazon RDS for PostgreSQL DB instance that is configured for a Multi-AZ deployment.
+
+Customers have reported application timeouts when the company undergoes database failovers. The company needs a resilient solution to reduce failover time.
+
+Which solution will meet these requirements?
+- Enable Performance Insights. Monitor the CPU load to identify the timeouts.
+- Create an Amazon RDS Proxy. Assign the proxy to the DB instance.
+- Take regular automatic snapshots. Copy the automatic snapshots to multiple AWS Regions.
+- Create a read replica for the DB instance. Move the read traffic to the read replica.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty chạy workload quan trọng trên AWS
+
+Sử dụng Amazon RDS PostgreSQL với Multi-AZ deployment
+
+Khách hàng báo cáo application timeouts khi xảy ra database failovers
+
+Cần giải pháp để giảm thời gian failover
+
+✅ Đáp án đúng:
+
+Create an Amazon RDS Proxy. Assign the proxy to the DB instance.
+
+RDS Proxy hoạt động như connection pooling layer, duy trì connection pool sẵn sàng. Khi failover xảy ra, RDS Proxy chuyển hướng traffic đến standby instance mà không cần tạo lại connection từ đầu, giảm đáng kể thời gian failover và application timeout.
+
+Tham khảo link bên dưới do aws công bố về hiệu quả giảm thời gian failover khi sử dụng RDS Proxy.
+
+Các đáp án sai:
+
+❌ Create a read replica for the DB instance. Move the read traffic to the read replica.
+
+→ Read replica chỉ giải quyết vấn đề liên quan đến performance cho read traffic, không giải quyết vấn đề failover time của primary database.
+
+❌ Enable Performance Insights. Monitor the CPU load to identify the timeouts.
+
+→ Performance Insights chỉ là monitoring tool, không cải thiện failover time hay giảm timeout.
+
+❌ Take regular automatic snapshots. Copy the automatic snapshots to multiple AWS Regions.
+→Backup strategy không liên quan đến việc giảm failover time, chỉ dùng cho use case disaster recovery.
+
+🔑 Tips and tricks:
+
+Giảm thời gian failover cho RDS hoặc Aurora thì nghĩ đến RDS Proxy
+
+📖 Reference:
+https://aws.amazon.com/blogs/database/improving-application-availability-with-amazon-rds-proxy/
 </details>
 
 ---
 
-### Q60. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q63. 
+A company needs to design a hybrid network architecture. The company's workloads are currently stored in the AWS Cloud and in on-premises data centers. The workloads require single-digit latencies to communicate. The company uses an AWS Transit Gateway transit gateway to connect multiple VPCs.
+
+Which combination of steps will meet these requirements MOST cost-effectively? (Choose two.)
+- Associate an AWS Direct Connect gateway with the transit gateway that is attached to the VPCs.
+- Establish an AWS Site-to-Site VPN connection to an AWS Direct Connect gateway.
+- Associate AWS Site-to-Site VPN connections with the transit gateway that is attached to the VPCs.
+- Establish an AWS Direct Connect connection. Create a transit virtual interface (VIF) to a Direct Connect gateway.
+- Establish an AWS Site-to-Site VPN connection to each VPC.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty cần thiết kế kiến trúc mạng hybrid (AWS Cloud + on-premises)
+
+Yêu cầu độ trễ hàng mili giây (single-digit latency) để giao tiếp
+
+Hiện tại đã dùng AWS Transit Gateway kết nối nhiều VPC
+
+Cần giải pháp cost-effective nhất
+
+✅ Đáp án đúng:
+
+Associate an AWS Direct Connect gateway with the transit gateway that is attached to the VPCs.
+
+Direct Connect Gateway cho phép Transit Gateway kết nối với on-premises qua Direct Connect
+
+Establish an AWS Direct Connect connection. Create a transit virtual interface (VIF) to a Direct Connect gateway.
+
+Direct Connect là đường truyền vật lý chuyên dụng với độ trễ thấp nhất, Đáp ứng yêu cầu độ trễ single-digit latency
+
+Transit VIF kết nối Direct Connect với Direct Connect Gateway
+
+Dựa vào kết hợp của 2 đáp án trên sẽ ra được kiến trúc như bên dưới, đáp ứng toàn bộ yêu cầu của câu hỏi.
+
+![img](https://static.cloudexam.pro/courses/5/1757177582941-oaeju8ck-image.png)
+
+Các đáp án sai:
+
+❌ Establish an AWS Site-to-Site VPN connection to each VPC.
+
+AWS Site-to-Site VPN là đường truyền dành riêng đi qua internet, do đó không đảm bảo được độ trễ độ trễ hàng mili giây (single-digit latency)
+
+❌ Establish an AWS Site-to-Site VPN connection to an AWS Direct Connect gateway.
+
+Tương tự như trên, VPN không đảm bảo được độ trễ độ trễ hàng mili giây (single-digit latency)
+
+Hơn nữa VPN không thể kết nối trực tiếp với Direct Connect Gateway, vô lý.
+
+❌ Associate AWS Site-to-Site VPN connections with the transit gateway that is attached to the VPCs.
+
+Tương tự như trên, VPN không đảm bảo được độ trễ độ trễ hàng mili giây (single-digit latency)
+
+🔑 Tips and tricks:
+
+Độ trễ hàng mili giây (single-digit latency) kết nối đến môi trường on-premise thì nghĩ đến Direct Connect
 </details>
 
 ---
 
-### Q61. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q64.
+A company is migrating its data processing application to the AWS Cloud. The application processes several short-lived batch jobs that cannot be disrupted. Data is generated after each batch job is completed. The data is accessed for 30 days and retained for 2 years.
+
+The company wants to keep the cost of running the application in the AWS Cloud as low as possible.
+
+Which solution will meet these requirements?
+- Deploy Amazon EC2 On-Demand Instances to run the batch jobs. Store the data in Amazon S3 Standard. Move the data to Amazon S3 Glacier Deep Archive after 30 days. Set an expiration to delete the data after 2 years.
+- Deploy Amazon EC2 Spot Instances to run the batch jobs. Store the data in Amazon S3 Standard. Move the data to Amazon S3 Glacier Flexible Retrieval after 30 days. Set an expiration to delete the data after 2 years.
+- Migrate the data processing application to Amazon EC2 Spot Instances. Store the data in Amazon S3 Standard. Move the data to Amazon S3 Glacier Instant. Retrieval after 30 days. Set an expiration to delete the data after 2 years.
+- Migrate the data processing application to Amazon EC2 On-Demand Instances. Store the data in Amazon S3 Glacier Instant Retrieval. Move the data to S3 Glacier Deep Archive after 30 days. Set an expiration to delete the data after 2 years.
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty migrate ứng dụng xử lý dữ liệu lên AWS Cloud
+
+Ứng dụng chạy các batch job ngắn hạn không thể bị gián đoạn (cannot be disrupted)
+
+Dữ liệu được truy cập trong 30 ngày đầu, lưu trữ tổng cộng 2 năm
+
+Mục tiêu: giảm chi phí tối đa (keep cost as low as possible)
+
+✅ Đáp án đúng:
+
+Deploy Amazon EC2 On-Demand Instances to run the batch jobs. Store the data in Amazon S3 Standard. Move the data to Amazon S3 Glacier Deep Archive after 30 days. Set an expiration to delete the data after 2 years.
+
+Lựa chọn EC2 On-Demand sẽ giúp đảm bảo batch jobs chạy không bị gián đoạn, vì có tính ổn định.
+
+Về việc lưu trữ data, sử dụng S3 Standard cho 30 ngày đầu do cần truy cập thường xuyên. Sau đó 30 ngày chỉ cần lưu trữ lâu dài trong 2 năm nên sẽ chuyển qua Glacier Deep Archive - storage class rẻ nhất cho việc lưu trữ lâu dài. Hết 2 năm thì xoá data.
+
+Các đáp án sai:
+
+❌ Migrate the data processing application to Amazon EC2 Spot Instances. Store the data in Amazon S3 Standard. Move the data to Amazon S3 Glacier Instant. Retrieval after 30 days. Set an expiration to delete the data after 2 years.
+
+→ Spot Instances có thể bị terminate bất kỳ lúc nào, không đáp ứng yêu cầu "cannot be disrupted"
+
+❌ Migrate the data processing application to Amazon EC2 On-Demand Instances. Store the data in Amazon S3 Glacier Instant Retrieval. Move the data to S3 Glacier Deep Archive after 30 days. Set an expiration to delete the data after 2 years.
+
+→ Không phù hợp vì dữ liệu cần truy cập thường xuyên trong 30 ngày đầu. Glacier Instant Retrieval sẽ bị đắt hơn S3 Standard cho use case truy cập thường xuyên này.
+
+❌ Deploy Amazon EC2 Spot Instances to run the batch jobs. Store the data in Amazon S3 Standard. Move the data to Amazon S3 Glacier Flexible Retrieval after 30 days. Set an expiration to delete the data after 2 years.
+
+→ Như trên, vẫn sử dụng Spot Instances.
+
+🔑 Tips and tricks:
+
+Chạy job mà cần tính ổn định, Cannot be interrupted thì sẽ tránh đáp án Spot Instances
 </details>
 
 ---
 
-### Q62. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q65. 
+A company's applications run on Amazon EC2 instances in Auto Scaling groups. The company notices that its applications experience sudden traffic increases on random days of the week. The company wants to maintain application performance during sudden traffic increases.
+
+Which solution will meet these requirements MOST cost-effectively?
+- Use manual scaling to change the size of the Auto Scaling group.
+- Use predictive scaling to change the size of the Auto Scaling group.
+- Use target tracking scaling to change the size of the Auto Scaling group.
+- Use schedule scaling to change the size of the Auto Scaling group.
 
 <details>
 <summary>Answer</summary>
-C
-</details>
+📝 Tóm tắt đề:
 
----
+Ứng dụng chạy trên EC2 instances & Auto Scaling groups
 
-### Q63. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+Traffic tăng thất thường vào các ngày ngẫu nhiên (sudden traffic increases on random days)
 
-<details>
-<summary>Answer</summary>
-C
-</details>
+Mục tiêu: đảm bảo performance trong lúc traffic tăng đột biến
 
----
+Yêu cầu: giải pháp cost-effective nhất
 
-### Q64. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+✅ Đáp án đúng:
 
-<details>
-<summary>Answer</summary>
-C
-</details>
+Use target tracking scaling to change the size of the Auto Scaling group.
 
----
+Target tracking scaling là cơ chế tự động scale EC2 dựa trên ngưỡng metric do mình định nghĩa (Vd: CPU 40%). Khi traffic tăng đột biến, sẽ tự động scale out ngay lập tức và scale in khi traffic giảm.
 
-### Q65. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+Với việc đáp ứng scale nhanh như vậy thì sẽ đảm bảo được cả performance lẫn tối ưu chi phí (cost-effective).
 
-<details>
-<summary>Answer</summary>
-C
+Các đáp án sai:
+
+❌ Use manual scaling to change the size of the Auto Scaling group.
+
+→ Sai vì cần can thiệp thủ công, không thể phản ứng kịp thời với sudden traffic increases xảy ra ngẫu nhiên.
+
+❌ Use predictive scaling to change the size of the Auto Scaling group.
+→ Predictive scaling là cơ chế scale EC2 dựa theo traffic trong quá khứ để từ đó đoán trước capacity để scale. Tuy nhiên đề bài nói là traffic sẽ thất thường, ngẫu nhiên nên không thể đoán trước được.
+
+❌ Use schedule scaling to change the size of the Auto Scaling group.
+
+→ Sai vì scheduled scaling dành cho traffic có lịch trình cố định (ví dụ: 9AM-5PM). Do đó traffic thất thường, ngẫu nhiên thì không thể áp dụng được
+
+🔑 Tips and tricks:
+
+Auto Scaling Group cần scale tự động để đáp ứng traffic thì nghĩ đến target tracking scaling
 </details>
