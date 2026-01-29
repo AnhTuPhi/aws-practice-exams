@@ -1698,3 +1698,276 @@ C
 <summary>Answer</summary>
 C
 </details>
+
+---
+
+### Q45. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q46. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q47. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q48. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q49. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q50. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q51. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q52. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q53. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q54. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q55. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q56. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q57. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q58. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q59. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q60. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q61. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q62. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q63. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q64. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
+
+---
+
+### Q65. Which is not a NoSQL DB?
+- A. MongoDB
+- B. Redis
+- C. MySQL
+- D. Cassandra
+
+<details>
+<summary>Answer</summary>
+C
+</details>
