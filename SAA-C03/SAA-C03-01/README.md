@@ -1,4 +1,522 @@
-## Quiz
+## Bộ đề 1
+
+---
+
+### Q1. 
+A company is developing an application in the AWS Cloud. The application's HTTP API contains critical information that is published in Amazon API Gateway. The critical information must be accessible from only a limited set of trusted IP addresses that belong to the company's internal network.
+
+Which solution will meet these requirements?
+- Set up an API Gateway private integration to restrict access to a predefined set of IP addresses.
+- Create a resource policy for the API that denies access to any IP address that is not specifically allowed.
+- Directly deploy the API in a private subnet. Create a network ACL. Set up rules to allow the traffic from specific IP addresses.
+- Modify the security group that is attached to API Gateway to allow inbound traffic from only the trusted IP addresses.
+
+<details>
+<summary>Answer</summary>
+📝 Tóm tắt đề:
+
+Company phát triển application với HTTP API trong API Gateway
+
+Chỉ muốn cho phép truy cập từ danh sách IP giới hạn (limited set of trusted IP addresses) thuộc mạng nội bộ công ty (company's internal network)
+
+✅ Đáp án đúng:
+
+Create a resource policy for the API that denies access to any IP address that is not specifically allowed.
+
+![img](https://static.cloudexam.pro/courses/5/1756734464759-qbwgf5fe-CleanShot_2025-09-01_at_22.47.32.png)
+
+→ Resource Policy cũng là một cách không mất tiền để định nghĩa quyền kiểm soát truy cập API Gateway theo IP. Policy có thể định nghĩa chính xác các IP được phép và từ chối tất cả IP khác. Đây là best practice cho IP whitelisting trong API Gateway.
+
+Các đáp án sai:
+
+❌ Set up an API Gateway private integration to restrict access to a predefined set of IP addresses.
+
+→ Sai. Private integration chỉ là cơ chế cho phép API Gateway kết nối với backend services trong VPC, không liên quan đến việc kiểm soát client access theo IP.
+
+❌ Directly deploy the API in a private subnet. Create a network ACL. Set up rules to allow the traffic from specific IP addresses.
+
+→ Sai. API Gateway là managed service, về bản chất không thể deploy trực tiếp trong subnet của VPC. Do đó Network ACL cũng không áp dụng cho API Gateway.
+
+❌ Modify the security group that is attached to API Gateway to allow inbound traffic from only the trusted IP addresses.
+
+→ Sai. API Gateway không sử dụng security groups như EC2. Security groups không áp dụng cho managed services như API Gateway.
+
+🔑 Tips and tricks:
+
+API Gateway access control theo IP thì có thể sử dụng resource policy hoặc
+
+API Gateway là managed service nên không thể đặt bên trong subnet VPC. Kể cả Private REST APIs thì cũng chỉ là cơ chế cho phép access đến API Gateway thông qua endpoint từ VPC, chứ không phải bản thân API GW được đặt trong VPC
+</details>
+
+---
+
+### Q2. 
+A company needs to give a globally distributed development team secure access to the company's AWS resources in a way that complies with security policies.
+
+The company currently uses an on-premises Active Directory for internal authentication. The company uses AWS Organizations to manage multiple AWS accounts that support multiple projects.
+
+The company needs a solution to integrate with the existing infrastructure to provide centralized identity management and access control.
+
+Which solution will meet these requirements with the LEAST operational overhead?
+
+- Set up AWS Directory Service to create an AWS managed Microsoft Active Directory on AWS. Establish a trust relationship with the on-premises Active Directory. Use IAM rotes that are assigned to Active Directory groups to access AWS resources within the company's AWS accounts.
+- Create an IAM user for each developer. Manually manage permissions for each IAM user based on each user's involvement with each project. Enforce multi-factor authentication (MFA) as an additional layer of security.
+- Use AD Connector in AWS Directory Service to connect to the on-premises Active Directory. Integrate AD Connector with AWS IAM Identity Center. Configure permissions sets to give each AD group access to specific AWS accounts and resources.
+- Use Amazon Cognito to deploy an identity federation solution. Integrate the identity federation solution with the on-premises Active Directory. Use Amazon Cognito to provide access tokens for developers to access AWS accounts and resources.
+
+<details>
+<summary>Answer</summary>
+📝 Tóm tắt đề:
+
+Công ty cần cấp quyền truy cập vào môi trường AWS cho team dev, cụ thể là các AWS accounts hiện đang được quản lí bởi AWS Organizations
+
+Đã có on-premises Active Directory để xác thực hệ thống nội bộ
+
+Cần tích hợp với hạ tầng hiện có (existing infrastructure), ở đây có nghĩa là sử dụng Active Directory có sẵn để quản lý xác thực tập trung
+
+Yêu cầu: ít tốn công nhất (LEAST operational overhead)
+
+✅ Đáp án đúng:
+
+Use AD Connector in AWS Directory Service to connect to the on-premises Active Directory. Integrate AD Connector with AWS IAM Identity Center. Configure permissions sets to give each AD group access to specific AWS accounts and resources.
+
+AD Connector cho phép kết nối trực tiếp với AD hiện có mà không cần tạo mới (integrate with the existing infrastructure)
+
+IAM Identity Center (trước đây là AWS SSO) cung cấp quản lý quyền truy cập tập trung cho multiple AWS accounts
+
+Permission sets cho phép gán quyền theo nhóm AD, phù hợp với Organizations structure
+
+Đây là kiến trúc tốn ít operational overhead nhất vì tận dụng AD hiện có + tự động sync
+
+Kiến trúc:
+![img](https://static.cloudexam.pro/courses/5/1756737277149-vcqaesq6-CleanShot_2025-09-01_at_23.33.17.png)
+
+Các đáp án sai:
+
+❌ Set up AWS Directory Service to create an AWS managed Microsoft Active Directory on AWS. Establish a trust relationship with the on-premises Active Directory. Use IAM rotes that are assigned to Active Directory groups to access AWS resources within the company's AWS accounts.
+
+→ Tạo thêm một AD mới trên AWS, tăng complexity và operational overhead không cần thiết, không tận dung được infrastructure hiện tại
+
+❌ Create an IAM user for each developer. Manually manage permissions for each IAM user based on each user's involvement with each project. Enforce multi-factor authentication (MFA) as an additional layer of security.
+
+→ Tạo thủ công từng IAM user cho mỗi người developmer sẽ bị operational overhead rất cao, không có khả năng scale hiệu quả
+
+❌ Use Amazon Cognito to deploy an identity federation solution. Integrate the identity federation solution with the on-premises Active Directory. Use Amazon Cognito to provide access tokens for developers to access AWS accounts and resources.
+
+→ Cognito chủ yếu sử dụng cho web applications, không phù hợp cho cấp quyền truy cập đến AWS Organizations
+
+🔑 Tips and tricks:
+
+Khi câu hỏi nhắc đến việc liên kết người dùng Active Directory để cho phép truy cập account trong Organization thì thường nghĩ ngay đến IAM Identity Center
+</details>
+
+---
+
+### Q3. 
+A company is hosting a website behind multiple Application Load Balancers. The company has different distribution rights for its content around the world. A solutions architect needs to ensure that users are served the correct content without violating distribution rights.
+
+Which configuration should the solutions architect choose to meet these requirements?
+- Configure Amazon CloudFront with AWS WAF
+- Configure Amazon Route 53 with a geoproximity routing policy
+- Configure Application Load Balancers with AWS WAF
+- Configure Amazon Route 53 with a geolocation policy
+
+<details>
+<summary>Answer</summary>
+📝 Tóm tắt đề:
+
+Công ty sử dụng nhiều Application Load Balancers để host website
+
+Công ty có quyền phân phối nội dung khác nhau (different distribution rights) theo từng vùng trên thế giới
+
+Cần đảm bảo users được phục vụ nội dung đúng mà không vi phạm quyền phân phối
+
+Tóm lại: Cần giới hạn quyền truy cập của user theo vùng hoặc quốc gia
+
+✅ Đáp án đúng:
+
+Configure Amazon Route 53 with a geolocation policy
+
+Route 53 geolocation policy cho phép định tuyến traffic dựa trên vị trí địa lý của user
+
+Có thể chỉ định chính xác user từ quốc gia/châu lục nào được truy cập vào endpoint nào
+
+Từ đó giúp đảm bảo tuân thủ distribution rights bằng cách kiểm soát truy cập theo địa lý
+
+Các đáp án sai:
+
+❌ Configure Amazon CloudFront with AWS WAF
+
+CloudFront là CDN để cache và tăng tốc, WAF là firewall bảo mật
+
+Không có khả năng kiểm soát phân phối nội dung theo quyền địa lý cụ thể
+
+Mặc dù WAF có khả năng hạn chế IP theo quốc gia, tuy nhiên bài toán có nhiều load balancer trên nhiều nơi khác nhau, do đó mỗi load balancer sẽ cần 1 WAF khác nhau để quản lí, từ đó tốn công sức và tốn thêm nhiều chi phí so với việc routing thông qua Route53
+
+❌ Configure Application Load Balancers with AWS WAF
+
+ALB + WAF chỉ có thể block/allow traffic dựa trên rules, không có khả năng routing theo địa lý
+
+Không giải quyết được yêu cầu phân phối nội dung khác nhau theo vùng
+
+❌ Configure Amazon Route 53 with a geoproximity routing policy
+
+Geoproximity routing phức tạp hơn, chủ yếu dùng để điều chỉnh traffic đến server có khả năng xử lý thuận tiện hơn hơn bất kể vị trí của người dùng. Ví dụ có server to ở Mỹ, server nhỏ ở Châu Âu thì vẫn có một phần ngườ dùng Châu Âu sẽ được điều hướng sang Mỹ vì server bên đó có tải tốt hơn. Tức là sẽ routing theo vị trí của resource chứ không phải vị trí của người dùng.
+
+Không kiểm soát được quyền truy cập theo địa lý như geolocation policy
+
+🔑 Tips and tricks:
+
+Hệ thống global cần hạn chế quyền truy cập theo khu vực hoặc quốc gia, có thể nghĩ đến Route53 Geolocation Routing Policy
+</details>
+
+---
+
+### Q4. 
+A company runs an application in a private subnet behind an Application Load Balancer (ALB) in a VPC. The VPC has a NAT gateway and an internet gateway. The application calls the Amazon S3 API to store objects.
+
+According to the company's security policy, traffic from the application must not travel across the internet.
+
+Which solution will meet these requirements MOST cost-effectively?
+- Configure an S3 interface endpoint. Create a security group that allows outbound traffic to Amazon S3.
+- Configure an S3 gateway endpoint. Update the VPC route table to use the endpoint.
+- Configure an S3 bucket policy to allow traffic from the Elastic IP address that is assigned to the NAT gateway.
+- Create a second NAT gateway in the same subnet where the legacy application is deployed. Update the VPC route table to use the second NAT gateway.
+
+<details>
+<summary>Answer</summary>
+📝 Tóm tắt đề:
+
+Ứng dụng chạy trong private subnet với ALB, hiện đang kết nối đến S3
+
+VPC có NAT gateway và internet gateway
+
+Ứng dụng cần gọi Amazon S3 API để lưu objects mà traffic không được đi qua internet
+
+Yêu cầu: giải pháp cost-effective nhất
+
+✅ Đáp án đúng:
+
+Configure an S3 gateway endpoint. Update the VPC route table to use the endpoint.
+
+Gateway endpoint cho S3 là dịch vụ miễn phí, cho phép kết nối đến S3 với traffic đi trực tiếp trong đường truyền nội bộ của AWS, không qua internet. Muốn cho các resource trong private subnet truy cập đến S3 thì chỉ cần cập nhật route table để điều hướng traffic S3 qua endpoint này là sẽ đạt được yêu cầu bài toán
+
+![img](https://static.cloudexam.pro/courses/5/1756825332440-3ncwvmv3-image.png)
+
+Các đáp án sai:
+
+❌ Configure an S3 interface endpoint. Create a security group that allows outbound traffic to Amazon S3.
+
+→ Solution hợp lệ, tuy nhiên sử dụng Interface endpoint sẽ bị tính phí theo giờ và phí data processing, đắt hơn gateway endpoint, do đó không cần thiết ở đây
+
+❌ Configure an S3 bucket policy to allow traffic from the Elastic IP address that is assigned to the NAT gateway.
+
+→ Traffic vẫn phải đi qua NAT gateway → internet, vi phạm security policy
+
+❌ Create a second NAT gateway in the same subnet where the legacy application is deployed. Update the VPC route table to use the second NAT gateway.
+
+→ Thêm chi phí NAT gateway không cần thiết và traffic vẫn đi qua internet
+
+🔑 Tips and tricks:
+
+Access đến các service từ bên trong VPC mà không đi qua internet, nghĩ ngay đến Gateway Endpoint (áp dụng cho S3, DynamoDB)
+</details>
+
+---
+
+### Q5. 
+A company's image-hosting website gives users around the world the ability to up load, view, and download images from their mobile devices. The company currently hosts the static website in an Amazon S3 bucket.
+
+Because of the website's growing popularity, the website's performance has decreased. Users have reported latency issues when they upload and download images.
+
+The company must improve the performance of the website.
+
+Which solution will meet these requirements with the LEAST implementation effort?
+- Configure an Amazon CloudFront distribution for the S3 bucket to improve the download performance. Enable S3 Transfer Acceleration to improve the upload performance.
+- Configure Amazon EC2 instances of the right sizes in multiple AWS Regions. Migrate the application to the EC2 instances. Use an Application Load Balancer to distribute the website traffic equally among the EC2 instances. Configure AWS Global Accelerator to address global demand with low latency.
+- Configure an Amazon CloudFront distribution that uses the S3 bucket as an origin to improve the download performance. Configure the application to use CloudFront to upload images to improve the upload performance. Create S3 buckets in multiple AWS Regions. Configure replication rules for the buckets to replicate users' data based on the users' location. Redirect downloads to the S3 bucket that is closest to each user's location.
+- Configure AWS Global Accelerator for the S3 bucket to improve network performance. Create an endpoint for the application to use Global Accelerator instead of the S3 bucket.
+
+<details>
+<summary>Answer</summary>
+📝 Tóm tắt đề:
+
+Công ty host web tĩnh (static website) trên S3 bucket
+
+Users trên toàn thế giới (around the world) upload, view, download ảnh
+
+Users báo cáo độ trễ (latency issues) khi upload và download
+
+Cần cải thiện hiệu suất với ít effort nhất (LEAST implementation effort)
+
+✅ Đáp án đúng:
+
+Configure an Amazon CloudFront distribution for the S3 bucket to improve the download performance. Enable S3 Transfer Acceleration to improve the upload performance.
+
+Bài toán đang gặp vấn đề ở độ trễ khi load và upload, để giải quyết thì sẽ cần:
+
+CloudFront là CDN service, cho phép cache các loại data như content tĩnh ở điểm cung cấp dịch vụ gần với người dùng nhất (edge locations), từ đó giúp giảm độ trễ, giúp cho việc load các content này nhanh hơn
+
+S3 Transfer Acceleration là một tính năng của S3 cho phép upload bằng cách route traffic đến edge location, từ đó đi qua mạng nội bộ của AWS, giúp giảm độ trễ
+
+Ít effort nhất: cả 2 cái ở trên đều là Managed service / tính năng có sẵn dễ config để đạt được yêu cầu, tốn ít effort
+
+![img](https://static.cloudexam.pro/courses/5/1756826475250-hh7xt4wx-image.png)
+
+
+Các đáp án sai:
+
+❌ Configure Amazon EC2 instances of the right sizes in multiple AWS Regions. Migrate the application to the EC2 instances. Use an Application Load Balancer to distribute the website traffic equally among the EC2 instances. Configure AWS Global Accelerator to address global demand with low latency.
+
+→ Yêu cầu migrate toàn bộ application, effort rất lớn, không phù hợp yêu cầu "LEAST implementation effort"
+
+❌ Configure an Amazon CloudFront distribution that uses the S3 bucket as an origin to improve the download performance. Configure the application to use CloudFront to upload images to improve the upload performance. Create S3 buckets in multiple AWS Regions. Configure replication rules for the buckets to replicate users' data based on the users' location. Redirect downloads to the S3 bucket that is closest to each user's location.
+
+→ Solution với độ phức tạp quá mức không cần thiết: nhiều components, replication rules, redirect logic -> tốn effort
+
+❌ Configure AWS Global Accelerator for the S3 bucket to improve network performance. Create an endpoint for the application to use Global Accelerator instead of the S3 bucket.
+
+→ Global Accelerator mặc dù giúp giảm độ trễ, tăng tốc kết nối tuy nhiên không trực tiếp support S3, chủ yếu sử dụng cho ALB/NLB/EC2 endpoints
+
+🔑 Tips and tricks:
+
+Các câu hỏi liên quan đến web tĩnh, content tĩnh mà cần tối ưu hoá độ trễ hay tăng tốc upload thì thường sẽ nghĩ đến CloudFront, S3 Transfer Acceleration
+</details>
+
+---
+
+### Q6. 
+A digital image processing company wants to migrate its on-premises monolithic application to the AWS Cloud. The company processes thousands of images and generates large files as part of the processing workflow.
+
+The company needs a solution to manage the growing number of image processing jobs. The solution must also reduce the manual tasks in the image processing workflow. The company does not want to manage the underlying infrastructure of the solution.
+
+Which solution will meet these requirements with the LEAST operational overhead?
+- Use Amazon Elastic Container Service (Amazon ECS) with Amazon EC2 Spot Instances to process the images. Configure Amazon Simple Queue Service (Amazon SQS) to orchestrate the workflow. Store the processed files in Amazon Elastic File System (Amazon EFS).
+- Use AWS Lambda functions and Amazon EC2 Spot Instances to process the images. Store the processed files in Amazon FSx.
+- Use AWS Batch jobs to process the images. Use AWS Step Functions to orchestrate the workflow. Store the processed files in an Amazon S3 bucket.
+- Deploy a group of Amazon EC2 instances to process the images. Use AWS Step Functions to orchestrate the workflow. Store the processed files in an Amazon Elastic Block Store (Amazon EBS) volume.
+
+<details>
+<summary>Answer</summary>
+📝 Tóm tắt đề:
+
+Công ty xử lý ảnh muốn di chuyển hệ thống từ on-premises lên AWS Cloud
+
+Cần solution cho việc chạy và quản lý workflow bao gồm nhiều job xử lí ảnh sao cho ít thao tác thủ công nhất và không muốn quản lí infastructure
+
+Yêu cầu: Giải pháp với chi phí vận hành thấp nhất
+
+✅ Đáp án đúng:
+
+Use AWS Batch jobs to process the images. Use AWS Step Functions to orchestrate the workflow. Store the processed files in an Amazon S3 bucket.
+
+AWS Batch là managed service cho phép tự động hoá và scale các công việc chạy job trên AWS, cho phép developer tập trung vào việc thực thi job mà không phải quản lý toàn bộ cơ sở hạ tầng. Do đó AWS Batch sẽ phù hợp với job xử lí ảnh của bài toán ở đây.
+
+Step Functions là serverless service giúp điều phối & tự động hoá, cho phép build các luồng công việc (workflow) phức tạp kết hợp nhiều service khác nhau, từ đó giúp giảm các tác vụ & thao tác thủ công. Trong bài toán hiện tại có thể sử dụng Step Functions để điều phối các job của AWS Batch, tạo ra một luồng xử lí tự động hoá hoàn toàn.
+
+S3 là giải pháp lưu trữ giá rẻ, rất phù hợp để lưu trữ ảnh sau khi đã xử lí xong.
+
+Tổng thể giải pháp này đem lại chi phí vận hành thấp nhất vì sử dụng hầu hết các service serverless.
+
+Kiến trúc tham khảo:
+![img](https://static.cloudexam.pro/courses/5/1756828230479-xd5expuo-image.png)
+
+Các đáp án sai:
+
+❌ Use Amazon Elastic Container Service (Amazon ECS) with Amazon EC2 Spot Instances to process the images. Configure Amazon Simple Queue Service (Amazon SQS) to orchestrate the workflow. Store the processed files in Amazon Elastic File System (Amazon EFS).
+
+Solution sử dụng EC2, do đó vẫn tốn effort vận hành
+
+❌ Use AWS Lambda functions and Amazon EC2 Spot Instances to process the images. Store the processed files in Amazon FSx.
+
+Tương tự như trên, vẫn là solution sử dụng EC2, do đó vẫn tốn effort vận hành
+
+❌ Deploy a group of Amazon EC2 instances to process the images. Use AWS Step Functions to orchestrate the workflow. Store the processed files in an Amazon Elastic Block Store (Amazon EBS) volume.
+
+Tương tự như trên, vẫn là solution sử dụng EC2, do đó vẫn tốn effort vận hành
+
+🔑 Tips and tricks:
+
+Xuất hiện keyword Workflow thì thường sẽ nghĩ đến Step Functions
+
+Solution cần ít effort vận hành thì các đáp án sẽ không ưu tiên chọn EC2
+
+Các yêu cầu về chạy job mà tốn ít effort thì thường sẽ nghĩ đến các service như Lambda, ECS Fargate, AWS Batch
+</details>
+
+---
+
+### Q7. 
+A company wants to provide users with access to AWS resources. The company has 1,500 users and manages their access to on-premises resources through Active Directory user groups on the corporate network. However, the company does not want users to have to maintain another identity to access the resources. A solutions architect must manage user access to the AWS resources while preserving access to the on-premises resources.
+
+What should the solutions architect do to meet these requirements?
+
+- Configure Security Assertion Markup Language (SAML) 2.0-based federation. Create roles with the appropriate policies attached. Map the roles to the Active Directory groups.
+- Create an IAM user for each user in the company. Attach the appropriate policies to each user.
+- Use Amazon Cognito with an Active Directory user pool. Create roles with the appropriate policies attached.
+- Define cross-account roles with the appropriate policies attached. Map the roles to the Active Directory groups.
+
+
+<details>
+<summary>Answer</summary>
+📝 Tóm tắt đề:
+
+Công ty có 1,500 users đang dùng Active Directory để quản lý truy cập ở phía on-premises
+
+Muốn cấp quyền cho các user này truy cập vào môi trường AWS
+
+Không muốn dùng thêm solution về quản lí identity mới, mà vẫn phải đảm bảo quyền to on-premises resources
+
+✅ Đáp án đúng:
+
+Configure Security Assertion Markup Language (SAML) 2.0-based federation. Create roles with the appropriate policies attached. Map the roles to the Active Directory groups.
+
+SAML federation cho phép các người dùng hiện tại sử dụng trực tiếp credentials của Active Directory để truy cập vào môi trường AWS mà không cần một cơ chế quản lí identity mới (chẳng hạn như IAM). Việc cấp quyền cho các người dùng này sẽ thông qua mapping roles với AD groups giúp quản lý permissions hiệu quả cho 1,500 users.
+
+![img](https://static.cloudexam.pro/courses/5/1756906624538-wwje5hdn-image.png)
+
+Các đáp án sai:
+
+❌ Create an IAM user for each user in the company. Attach the appropriate policies to each user.
+
+→ Tạo 1,500 IAM users riêng biệt vi phạm yêu cầu "không quản lý thêm identity" vì như thế sẽ phải quản lý thêm IAM User Credentials.
+
+❌ Use Amazon Cognito with an Active Directory user pool. Create roles with the appropriate policies attached.
+→ Cognito User Pool vừa tạo ra thêm một identity store riêng biệt, vi phạm yêu cầu "không quản lý thêm identity", hơn nữa không tương tác và liên kết trực tiếp với Active Directory hiện tại được.
+
+❌ Define cross-account roles with the appropriate policies attached. Map the roles to the Active Directory groups.
+
+→ Cross-account roles dùng cho việc access giữa các AWS accounts khác nhau, không giải quyết việc integrate với on-premises Active Directory.
+
+🔑 Tips and tricks:
+
+Để cho phép các user trong Active Directory có thể access môi trường aws của một account đơn lẻ, không phải AWS Organizations thì sẽ nghĩ đến liên kết SAML 2.0 & IAM Role
+
+📖 Reference:
+
+https://aws.amazon.com/blogs/security/enabling-federation-to-aws-using-windows-active-directory-adfs-and-saml-2-0/
+</details>
+
+---
+
+### Q8. 
+A company has a three-tier web application that processes orders from customers. The web tier consists of Amazon EC2 instances behind an Application Load Balancer. The processing tier consists of EC2 instances. The company decoupled the web tier and processing tier by using Amazon Simple Queue Service (Amazon SQS). The storage layer uses Amazon DynamoDB.
+
+At peak times, some users report order processing delays and halls. The company has noticed that during these delays, the EC2 instances are running at 100% CPU usage, and the SQS queue fills up. The peak times are variable and unpredictable.
+
+The company needs to improve the performance of the application.
+
+Which solution will meet these requirements?
+- Use scheduled scaling for Amazon EC2 Auto Scaling
+- Use Amazon ElastiCache for Redis in front of the DynamoDB
+- Add an Amazon CloudFront distribution to cache responses for the web tier
+- Use an Amazon EC2 Auto Scaling target tracking policy to scale out the processing tier instances. Use the ApproximateNumberOfMessages attribute to determine when to scale.
+
+<details>
+<summary>Answer</summary>
+📝 Tóm tắt đề:
+
+Bài toán có hệ thống xử lý order bằng kiến trúc : Web tier (EC2 + ALB) → SQS queue → Processing tier (EC2) → DynamoDB
+
+Hệ thống có vấn đề khi gặp traffic không dự đoán được (variable and unpredictable):
+
+EC2 processing tier chạy 100% CPU
+
+SQS queue fills up (nhiều message mà không xử lý hết)
+
+Users nhận thấy việc xử lí order bị delays
+
+Cần cải thiện performance
+
+✅ Đáp án đúng:
+
+Use an Amazon EC2 Auto Scaling target tracking policy to scale out the processing tier instances. Use the ApproximateNumberOfMessages attribute to determine when to scale.
+
+Có thể thấy hệ thống hiện tại đang bị bottle neck ở việc EC2 Processing Tier không xử lí hết data trong queue do chưa có cơ chế scale, do đó sẽ cần implement Auto Scaling Group. Kết hợp setup Target tracking policy để có thể tự động scale EC2 dựa trên metric
+
+ApproximateNumberOfMessages - metric thể hiện số lượng message đang có trong queue. Tức là càng nhiều message thì sẽ scale càng nhiều EC2. Do đó đây là đáp án hợp lý, có thể scale đáp ứng được cả traffic thất thường (unpredictable peaks). Có thể xem kiến trúc bên dứoi để thấy trước & sau khi cải thiện.
+
+![img](https://static.cloudexam.pro/courses/5/1756908848631-bu3e2r5r-CleanShot_2025-09-03_at_23.13.19_2x.png)
+
+Các đáp án sai:
+
+❌ Use scheduled scaling for Amazon EC2 Auto Scaling
+
+Do traffic thất thường "variable and unpredictable" nên sẽ không thể sử dụng schedule scaling (scale theo lịch cố định) được
+
+❌ Use Amazon ElastiCache for Redis in front of the DynamoDB
+
+Sai vì bottleneck không phải ở DynamoDB mà ở processing tier (EC2 100% CPU + SQS fills up)
+
+❌ Add an Amazon CloudFront distribution to cache responses for the web tier
+
+Sai vì vấn đề không phải ở web tier mà ở processing tier không kịp xử lý queue
+
+🔑 Tips and tricks:
+
+Khi bài toán có EC2 xử lí SQS mà gặp vấn đề bottleneck thì nghĩ đến việc sử dụng kết hợp Auto Scaling Group và scale dựa trên metric số lượng message có trong queue
+
+Việc scale EC2 thì thường sẽ sử dụng Target Tracking policy vì có tính tự động hoá cao, giúp đáp ứng khi gặp traffic lớn hoặc thất thường
+
+📖 Reference:
+
+https://docs.aws.amazon.com/autoscaling/ec2/userguide/as-using-sqs-queue.html
+</details>
+
+---
+
+### Q9. 
+A company hosts an application in a private subnet behind an Application Load Balancer. The company has already integrated the application with Amazon Cognito. The company uses an Amazon Cognito user pool to authenticate users.
+
+The company needs to modify the application so the authenticated users can securely store their documents in an Amazon S3 bucket via the application.
+
+Which combination of steps will securely integrate Amazon S3 with the application? (Choose two.)
+- Use the existing Amazon Cognito user pool to generate Amazon S3 access tokens for users when they successfully log in.
+- Create a NAT gateway in the VPC where the company hosts the application. Assign a policy to the S3 bucket to deny any request that is not initiated from Amazon Cognito.
+- Create an Amazon S3 VPC endpoint in the same VPC where the company hosts the application.
+- Attach a policy to the S3 bucket that allows access only from the users' IP addresses.
+- Create an Amazon Cognito identity pool to generate secure Amazon S3 access tokens for users when they successfully log in.
+
+<details>
+<summary>Answer</summary>
+📝 Tóm tắt đề:
+
+Hệ thống host trong private subnet
+
+Có sử dụng Amazon Cognito user pool để xác thực users
+
+Hệ thống cần cho phép người dùng đã xác thực có thể kết nối đến S3 một cách an toàn thông qua application
+
+✅ Đáp án đúng:
+
+Create an Amazon Cognito identity pool to generate secure Amazon S3 access tokens for users when they successfully log in.
+
+Identity pool là service giúp tạo credentials tạm thời cho các user bên ngoài có thể truy cập vào môi trường AWS, có thể sử dụng để truy cập đến S3
+
+Create an Amazon S3 VPC endpoint in the same VPC where the company hosts the application.
+
+Do người dùng access đến S3 thông qua application, do đó application sẽ cần cơ chế để access đến S3 một cách an toàn, do đó sẽ sử dụng S3 VPC Endpoint - service cho phép application từ bên trong VPC có thể access đến S3 thông qua đường truyền nội bộ của AWS mà không đi qua internet, do đó sẽ có tính an toàn
+
+Các đáp án sai:
+
+❌ Use the existing Amazon Cognito user pool to generate Amazon S3 access tokens for users when they successfully log in.
+
+User pool chỉ dùng để xác thực, không thể tạo AWS access tokens để truy cập S3
+
+❌ Create a NAT gateway in the VPC where the company hosts the application. Assign a policy to the S3 bucket to deny any request that is not initiated from Amazon Cognito.
+
+NAT gateway không cần thiết khi có sử dụng VPC endpoint, hơn nữa traffic sẽ đi ra internet nên sẽ không an toàn (not secured)
+
+❌ Attach a policy to the S3 bucket that allows access only from the users' IP addresses.
+
+IP addresses của users có thể thay đổi và không thể biết trước được, do đó đây không phải giải pháp có tính mở rộng (scalable) và an toàn (secure)
+
+🔑 Tips and tricks:
+
+Để cấp quyền cho các user bên ngoài hệ thống có thể truy cập các AWS Service thì nghĩ đến Cognito Identity Pool
+
+Cho phép application trong VPC access đến các service khác một cách an toàn thì nghĩ đến VPC Endpoint
+</details>
 
 ### Q10. 
 A company runs multiple workloads on virtual machines (VMs) in an on-premises data center. The company is expanding rapidly. The on-premises data center is not able to scale fast enough to meet business needs. The company wants to migrate the workloads to AWS.
@@ -357,7 +875,7 @@ Phân tích thái độ người dùng (sentiment analysis) thì thường nghĩ
 </details>
 
 ---
-[
+
 ### Q16. 
 A company hosts its enterprise resource planning (ERP) system in the us-east-1 Region. The system runs on Amazon EC2 instances. Customers use a public API that is hosted on the EC2 instances to exchange information with the ERP system. International customers report slow API response times from their data centers.
 
@@ -522,10 +1040,10 @@ The order collection process occurs quickly, but the order fulfillment process c
 A solutions architect must ensure that the order collection process and the order fulfillment process can both scale adequately during peak traffic hours.
 
 Which solution will meet these requirements?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+- Provision two Amazon Simple Queue Service (Amazon SQS) queues. Use one SQS queue for order collection. Use the second SQS queue for order fulfillment. Configure the EC2 instances to poll their respective queues. Scale the Auto Scaling groups based on the number of messages in each queue.
+- Use Amazon CloudWatch to monitor the CPUUtilization metric for each instance in both Auto Scaling groups. Configure each Auto Scaling group's minimum capacity to meet its peak workload value.
+- Use Amazon CloudWatch to monitor the CPUUtilization metric for each instance in both Auto Scaling groups. Configure a CloudWatch alarm to invoke an Amazon Simple Notification Service (Amazon SNS) topic to create additional Auto Scaling groups on demand.
+- Provision two Amazon Simple Queue Service (Amazon SQS) queues. Use one SQS queue for order collection. Use the second SQS queue for order fulfillment. Configure the EC2 instances to poll their respective queues. Scale the Auto Scaling groups based on notifications that the queues send.
 
 <details>
 <summary>Answer</summary>
@@ -551,7 +1069,7 @@ Sử dụng SQS queue đóng vai trò buffer cho việc truyền data đến m�
 
 Để có khả năng scale EC2 tự động khi traffic tăng thì sẽ dựa vào Metric số lượng messages trong queue thực tế đang là bao nhiêu, từ đó đặt Cloudwatch Alarm phù hợp.
 
-
+![img](https://static.cloudexam.pro/courses/5/1756977911129-d841wucm-image.png)
 
 Các đáp án sai:
 
@@ -574,15 +1092,57 @@ Các bài toán liên quan đến xử lí order, cần tránh việc mất data
 
 ---
 
-### Q20. Which is not a NoSQL DB?
-- A. MongoDB
-- B. Redis
-- C. MySQL
-- D. Cassandra
+### Q20. 
+
+A company currently stores 5 TB of data in on-premises block storage systems. The company's current storage solution provides limited space for additional data. The company runs applications on premises that must be able to retrieve frequently accessed data with low latency. The company requires a cloud-based storage solution.
+
+Which solution will meet these requirements with the MOST operational efficiency?
+- Use Amazon S3 File Gateway with SMB file system
+- Use Volume Gateway with stored volumes
+- Use an AWS Storage Gateway Volume Gateway with cached volumes as iSCSI targets.
+- Use Tape Gateway with virtual tapes
 
 <details>
 <summary>Answer</summary>
-C
+📝 Tóm tắt đề:
+
+Công ty lưu dữ liệu trên block storage ở phía on-premises
+
+Không gian lưu trữ hạn chế nên cần giải pháp lưu trữ cloud-based với hiệu quả vận hành cao nhất (MOST operational efficiency)
+
+Ứng dụng on-premises cần truy xuất dữ liệu thường xuyên truy cập (frequently accessed) với độ trễ thấp (low latency)
+
+✅ Đáp án đúng:
+
+Use an AWS Storage Gateway Volume Gateway with cached volumes as iSCSI targets.
+
+Cached volumes lưu dữ liệu thường xuyên truy cập tại local cache → đảm bảo low latency
+
+Các dữ liệu còn lại sẽ được đồng bộ và lưu trữ tại Amazon S3, do đó có khả năng mở rộng không giới hạn
+
+Tương thích với block storage hiện tại (iSCSI protocol)
+
+Có độ hiệu quả vận hành (operational efficiency) cao vì tự động hoá việc quản lí cache tại local
+
+![img](https://static.cloudexam.pro/courses/5/1756991188130-0brb4wc2-CleanShot_2025-09-04_at_22.05.39.png)
+
+Các đáp án sai:
+
+❌ Use Amazon S3 File Gateway with SMB file system
+
+Đề yêu cầu block storage, không phải file storage. SMB là file-based protocol, không tương thích với ứng dụng block storage hiện tại.
+
+❌ Use Volume Gateway with stored volumes
+
+Sai vì stored volumes mặc dù có đồng bộ lên S3 tuy nhiên vẫn lưu toàn bộ dữ liệu tại on-premises → không giải quyết vấn đề limited space.
+
+❌ Use Tape Gateway with virtual tapes
+
+Sai vì Tape Gateway dùng cho use case là archival/backup, không phải cho data hay được truy cập với độ trễ thấp.
+
+🔑 Tips and tricks:
+
+Khi cần solution storage cho local mà support dạng block storage thì sẽ nghĩ đến Volume Gateway. Keyword: iSCSI, Block Storage, Volume
 </details>
 
 ---
